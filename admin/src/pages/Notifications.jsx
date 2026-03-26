@@ -77,7 +77,7 @@ export default function Notifications() {
             <p className="mb-2 text-sm text-text-2">Деңгей (қажет болса)</p>
             <input
               className="input"
-              placeholder="beginner / intermediate / advanced"
+              placeholder="1 / 2 / 3 / 4 / 5 / 6"
               value={form.level}
               onChange={(event) => setForm((prev) => ({ ...prev, level: event.target.value }))}
             />

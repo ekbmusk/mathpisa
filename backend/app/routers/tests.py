@@ -9,34 +9,35 @@ from app.models.test_result import TestResult
 from app.models.progress import Progress as ProgressModel
 from app.models.admin_test import AdminTestQuestion
 from app.schemas.test_result import TestSet, TestQuestion, TestSubmit, TestResultOut
+from app.services.analytics_service import update_topic_mastery
+from app.services.achievement_service import check_and_award
+from app.services.progress_service import update_streak
 
 router = APIRouter()
 
 TOPIC_META = {
-    "mechanics": "Механика",
-    "thermodynamics": "Термодинамика",
-    "electromagnetism": "Электромагнетизм",
-    "optics": "Оптика",
-    "quantum": "Кванттық физика",
-    "nuclear": "Ядролық физика",
+    "quantity": "Сан және шама",
+    "change_and_relationships": "Өзгерістер мен тәуелділіктер",
+    "space_and_shape": "Кеңістік пен пішін",
+    "uncertainty_and_data": "Анықсыздық пен деректер",
 }
 
 OPTION_TO_IDX = {"A": 0, "B": 1, "C": 2, "D": 3}
 
 # Keep TEST_BANK only for initial seed (used by database.py seeder)
 TEST_BANK = [
-    {"id": 1, "topic": "mechanics", "question": "Ньютонның бірінші заңын тұжырымдаңыз.", "options": ["Дене тыныштықта немесе бірқалыпты қозғалыста болады, егер оған күш әсер етпесе", "F = ma", "Екі дене өзара тең және қарама-қарсы күштермен әрекеттеседі", "Жылдамдық уақытқа пропорционал"], "correct_answer": 0, "explanation": "Инерция заңы: сыртқы күш болмаса, дене өз қозғалыс күйін сақтайды."},
-    {"id": 2, "topic": "mechanics", "question": "Кинетикалық энергия формуласы қандай?", "options": ["E = mgh", "E = mv²/2", "E = Fs", "E = QT"], "correct_answer": 1, "explanation": "Eₖ = mv²/2, мұнда m — масса, v — жылдамдық."},
-    {"id": 3, "topic": "electromagnetism", "question": "Омның заңы бойынша ток күші неге тең?", "options": ["I = UR", "I = U/R", "I = R/U", "I = U + R"], "correct_answer": 1, "explanation": "I = U/R — Омның заңы: ток кернеуге тура, кедергіге кері пропорционал."},
-    {"id": 4, "topic": "optics", "question": "Жарық жылдамдығы вакуумда нешеге тең?", "options": ["3·10⁸ м/с", "3·10⁶ м/с", "1.5·10⁸ м/с", "6·10⁸ м/с"], "correct_answer": 0, "explanation": "c ≈ 3·10⁸ м/с — жарықтың вакуумдағы жылдамдығы."},
-    {"id": 5, "topic": "thermodynamics", "question": "Термодинамиканың бірінші бастамасы нені білдіреді?", "options": ["Жылу пайдасыз жоғалады", "Q = ΔU + A", "Энтропия азаяды", "Жылу тек бір бағытта өтеді"], "correct_answer": 1, "explanation": "Q = ΔU + A: берілген жылу ішкі энергияны өсіруге және жұмыс жасауға жұмсалады."},
-    {"id": 6, "topic": "electromagnetism", "question": "Кулон заңындағы k тұрақтысының мәні?", "options": ["9·10⁹ Н·м²/Кл²", "6.67·10⁻¹¹ Н·м²/кг²", "1.6·10⁻¹⁹ Кл", "8.85·10⁻¹² Ф/м"], "correct_answer": 0, "explanation": "k = 9·10⁹ Н·м²/Кл² — электростатикалық тұрақты."},
-    {"id": 7, "topic": "mechanics", "question": "Бос түсу үдеуі g нешеге тең?", "options": ["9.8 м/с²", "10 м/с", "9.8 м/с", "9.8 км/с²"], "correct_answer": 0, "explanation": "g ≈ 9.8 м/с² — Жер бетіндегі бос түсу үдеуі."},
-    {"id": 8, "topic": "quantum", "question": "Фотоэффект теориясын кім ашты?", "options": ["Ньютон", "Эйнштейн", "Планк", "Бор"], "correct_answer": 1, "explanation": "Эйнштейн 1905 жылы фотоэффектті кванттық теория арқылы түсіндірді."},
-    {"id": 9, "topic": "nuclear", "question": "Жарты ыдырау кезеңі дегеніміз не?", "options": ["Барлық ядролардың ыдырауы", "Жартысы ыдырайтын уақыт", "Бір ядроның ыдырауы", "Радиация тоқтайтын уақыт"], "correct_answer": 1, "explanation": "T₁/₂ — бастапқы ядролар санының жартысы ыдырайтын уақыт."},
-    {"id": 10, "topic": "nuclear", "question": "Қандай формула массаны энергияға байланыстырады?", "options": ["F = ma", "E = mc²", "E = hν", "p = mv"], "correct_answer": 1, "explanation": "E = mc² — Эйнштейннің массаның эквиваленттік формуласы."},
-    {"id": 11, "topic": "mechanics", "question": "Потенциалдық энергия формуласы (биіктіктегі)?", "options": ["E = mv²/2", "E = mgh", "E = kx²/2", "E = qU"], "correct_answer": 1, "explanation": "Ep = mgh, мұнда h — биіктік, g — бос түсу үдеуі."},
-    {"id": 12, "topic": "mechanics", "question": "Тербеліс периоды T дегеніміз не?", "options": ["Бір тербелістің ұзақтығы", "Секундтағы тербелістер саны", "Амплитуданың квадраты", "Жиілік"], "correct_answer": 0, "explanation": "T — толық бір тербеліс жасалатын уақыт (с)."},
+    {"id": 1, "topic": "quantity", "question": "250-нің 12%-ы неге тең?", "options": ["25", "30", "28", "32"], "correct_answer": 1, "explanation": "250 × 12/100 = 30."},
+    {"id": 2, "topic": "quantity", "question": "Егер $\\frac{3}{5} = \\frac{x}{20}$ болса, $x$ нешеге тең?", "options": ["10", "15", "12", "18"], "correct_answer": 2, "explanation": "Айқас көбейту: 3 × 20 = 5x → x = 60/5 = 12."},
+    {"id": 3, "topic": "change_and_relationships", "question": "$3x - 7 = 14$ теңдеуін шешіңіз.", "options": ["5", "7", "3", "21"], "correct_answer": 1, "explanation": "3x = 14 + 7 = 21, x = 21/3 = 7."},
+    {"id": 4, "topic": "change_and_relationships", "question": "$y = 2x + 1$ функциясының графигі қай нүктеден өтеді?", "options": ["(0, 1)", "(1, 0)", "(0, 2)", "(2, 0)"], "correct_answer": 0, "explanation": "x = 0 болғанда y = 2(0) + 1 = 1, сондықтан (0, 1) нүктесі."},
+    {"id": 5, "topic": "space_and_shape", "question": "Қабырғасы 6 см квадраттың ауданы нешеге тең?", "options": ["24 см²", "36 см²", "12 см²", "48 см²"], "correct_answer": 1, "explanation": "S = a² = 6² = 36 см²."},
+    {"id": 6, "topic": "space_and_shape", "question": "Пифагор теоремасы бойынша, катеттері 5 және 12 болса, гипотенуза нешеге тең?", "options": ["17", "13", "15", "14"], "correct_answer": 1, "explanation": "c = √(5² + 12²) = √(25 + 144) = √169 = 13."},
+    {"id": 7, "topic": "uncertainty_and_data", "question": "Деректер: 4, 7, 7, 9, 13. Медиана неге тең?", "options": ["7", "8", "9", "4"], "correct_answer": 0, "explanation": "Реттелген қатарда ортаңғы мән 7."},
+    {"id": 8, "topic": "uncertainty_and_data", "question": "Монетаны 2 рет лақтырғанда екеуі де елтаңба болу ықтималдығы?", "options": ["1/2", "1/4", "1/3", "1/8"], "correct_answer": 1, "explanation": "P = 1/2 × 1/2 = 1/4."},
+    {"id": 9, "topic": "change_and_relationships", "question": "$x^2 - 9 = 0$ теңдеуінің шешімдері қандай?", "options": ["3 және -3", "9 және -9", "3 және 0", "0 және -3"], "correct_answer": 0, "explanation": "x² = 9, x = ±3."},
+    {"id": 10, "topic": "quantity", "question": "$2^5$ неге тең?", "options": ["10", "25", "32", "64"], "correct_answer": 2, "explanation": "2⁵ = 2×2×2×2×2 = 32."},
+    {"id": 11, "topic": "space_and_shape", "question": "Радиусы 10 см шеңбердің ұзындығы нешеге тең? ($\\pi \\approx 3.14$)", "options": ["31.4 см", "62.8 см", "314 см", "20 см"], "correct_answer": 1, "explanation": "C = 2πr = 2 × 3.14 × 10 = 62.8 см."},
+    {"id": 12, "topic": "uncertainty_and_data", "question": "Кәсіпорынның 5 жылдағы пайдасы (млн тг): 10, 15, 12, 18, 20. Орташа жылдық пайда?", "options": ["12", "15", "18", "20"], "correct_answer": 1, "explanation": "Орташа = (10+15+12+18+20)/5 = 75/5 = 15 млн тг."},
 ]
 
 
@@ -47,6 +48,8 @@ def _db_to_question(q: AdminTestQuestion) -> TestQuestion:
         options=[q.option_a, q.option_b, q.option_c, q.option_d],
         correct_answer=OPTION_TO_IDX.get(q.correct_option, 0),
         explanation=q.explanation,
+        image_url=q.image_url,
+        table_data=q.table_data,
     )
 
 
@@ -126,6 +129,8 @@ async def submit_test(body: TestSubmit, db: Session = Depends(get_db)):
 
     percentage = round((correct / total * 100) if total > 0 else 0, 1)
     actual_bonus_xp = 0
+    new_achievements = []
+    result = None
 
     if body.telegram_id:
         user = db.query(User).filter(User.telegram_id == body.telegram_id).first()
@@ -141,26 +146,12 @@ async def submit_test(body: TestSubmit, db: Session = Depends(get_db)):
         today_str = date.today().isoformat()
 
         if body.is_daily and user.last_daily_date != today_str:
-            actual_bonus_xp = 50
             user.last_daily_date = today_str
+            db.flush()  # Prevent race condition on concurrent submissions
+            actual_bonus_xp = 50
 
         user.score = (user.score or 0) + base_xp + actual_bonus_xp
-
-        # Fix streak
-        now = datetime.now(timezone.utc)
-        last = user.last_activity
-        if last:
-            last_aware = last.replace(tzinfo=timezone.utc) if last.tzinfo is None else last
-            diff_days = (now.date() - last_aware.date()).days
-            if diff_days == 1:
-                user.streak = (user.streak or 0) + 1
-            elif diff_days == 0:
-                pass  # already active today
-            else:
-                user.streak = 1
-        else:
-            user.streak = 1
-        user.last_activity = now
+        update_streak(db, user)
 
         result = TestResult(
             user_id=user.id,
@@ -193,15 +184,31 @@ async def submit_test(body: TestSubmit, db: Session = Depends(get_db)):
                     last_updated=now,
                 ))
 
+        # Update topic mastery with per-question results
+        mastery_results: dict[str, list[bool]] = {}
+        for answer_item in body.answers:
+            q = question_map.get(answer_item.question_id)
+            if not q:
+                continue
+            correct_idx = OPTION_TO_IDX.get(q.correct_option, 0)
+            is_correct_item = answer_item.answer == correct_idx
+            mastery_results.setdefault(q.topic, []).append(is_correct_item)
+        if mastery_results:
+            update_topic_mastery(db, user.id, mastery_results)
+
+        new_achievements = check_and_award(db, user)
         db.commit()
 
+    result_id = result.id if body.telegram_id and result else None
     return TestResultOut(
+        result_id=result_id,
         correct=correct,
         total=total,
         percentage=percentage,
         passed=percentage >= 70,
         xp_earned=int(percentage) if body.telegram_id else 0,
         bonus_xp=actual_bonus_xp,
+        new_achievements=new_achievements if body.telegram_id else [],
     )
 
 
@@ -229,3 +236,41 @@ async def get_test_history(telegram_id: int, db: Session = Depends(get_db)):
         }
         for r in results
     ]
+
+
+@router.get("/review/{result_id}")
+async def review_test(result_id: int, db: Session = Depends(get_db)):
+    """Return full question details for reviewing a completed test."""
+    test_result = db.query(TestResult).filter(TestResult.id == result_id).first()
+    if not test_result:
+        raise HTTPException(status_code=404, detail="Тест нәтижесі табылмады")
+
+    answers_data = test_result.answers or []
+    question_ids = [a.get("question_id") for a in answers_data if a.get("question_id")]
+    db_questions = db.query(AdminTestQuestion).filter(AdminTestQuestion.id.in_(question_ids)).all()
+    q_map = {q.id: q for q in db_questions}
+
+    questions = []
+    for a in answers_data:
+        q = q_map.get(a.get("question_id"))
+        if not q:
+            continue
+        correct_idx = OPTION_TO_IDX.get(q.correct_option, 0)
+        questions.append({
+            "question": q.question,
+            "options": [q.option_a, q.option_b, q.option_c, q.option_d],
+            "your_answer": a.get("answer"),
+            "correct_answer": correct_idx,
+            "correct": a.get("correct", False),
+            "explanation": q.explanation,
+            "topic": TOPIC_META.get(q.topic, q.topic),
+            "image_url": q.image_url,
+            "table_data": q.table_data,
+        })
+
+    return {
+        "percentage": test_result.percentage,
+        "correct": test_result.correct_answers,
+        "total": test_result.total_questions,
+        "questions": questions,
+    }

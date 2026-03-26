@@ -14,6 +14,15 @@
   --tg-theme-secondary-bg-color: #1A1A2E;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-top: env(safe-area-inset-top, 0px);
+  /* Dynamic viewport height for Telegram WebView */
+  --app-vh: 1dvh;
+}
+
+/* Fallback for browsers that don't support dvh */
+@supports not (height: 1dvh) {
+  :root {
+    --app-vh: 1vh;
+  }
 }
 
 * {
@@ -29,25 +38,49 @@ body {
   color: #FFFFFF;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  /* Prevent pull-to-refresh in WebView */
+  overscroll-behavior-y: contain;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Dynamic viewport height utility */
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.min-h-screen-safe {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* KaTeX dark theme */
 .katex {
   color: #E8E6FF !important;
-  font-size: 1.05em !important;
+  font-size: 1em !important;
 }
 
 .katex-display {
   color: #E8E6FF !important;
+  margin: 0.5em 0 !important;
+}
+
+/* Responsive KaTeX - prevent horizontal overflow */
+.katex-display > .katex {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
 }
 
 /* Custom scrollbar */
@@ -65,118 +98,45 @@ body {
   border-radius: 3px;
 }
 
-/* Physics particle animation */
+/* Math particle animation */
 @keyframes particle-1 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.6;
-  }
-
-  33% {
-    transform: translate(12px, -18px) scale(1.2);
-    opacity: 1;
-  }
-
-  66% {
-    transform: translate(-8px, 10px) scale(0.8);
-    opacity: 0.4;
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  33% { transform: translate(12px, -18px) scale(1.2); opacity: 1; }
+  66% { transform: translate(-8px, 10px) scale(0.8); opacity: 0.4; }
 }
 
 @keyframes particle-2 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 0.4;
-  }
-
-  50% {
-    transform: translate(-15px, -12px) rotate(180deg);
-    opacity: 0.8;
-  }
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.4; }
+  50% { transform: translate(-15px, -12px) rotate(180deg); opacity: 0.8; }
 }
 
 @keyframes particle-3 {
-
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-
-  50% {
-    transform: translateY(-20px);
-    opacity: 0.9;
-  }
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-20px); opacity: 0.9; }
 }
 
 @keyframes orbit {
-  from {
-    transform: rotate(0deg) translateX(18px) rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg) translateX(18px) rotate(-360deg);
-  }
+  from { transform: rotate(0deg) translateX(18px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(18px) rotate(-360deg); }
 }
 
 @keyframes glowPulse {
-
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.85;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.08); }
 }
 
 @keyframes drift {
-
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, -8px, 0);
-  }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
 }
 
-.particle {
-  position: absolute;
-  pointer-events: none;
-}
-
-.particle-1 {
-  animation: particle-1 4s ease-in-out infinite;
-}
-
-.particle-2 {
-  animation: particle-2 5s ease-in-out infinite 1s;
-}
-
-.particle-3 {
-  animation: particle-3 3.5s ease-in-out infinite 0.5s;
-}
-
-.particle-orbit {
-  animation: orbit 6s linear infinite;
-}
-
-.effect-glow-pulse {
-  animation: glowPulse 3.2s ease-in-out infinite;
-}
-
-.effect-drift {
-  animation: drift 4.8s ease-in-out infinite;
-}
+.particle { position: absolute; pointer-events: none; }
+.particle-1 { animation: particle-1 4s ease-in-out infinite; }
+.particle-2 { animation: particle-2 5s ease-in-out infinite 1s; }
+.particle-3 { animation: particle-3 3.5s ease-in-out infinite 0.5s; }
+.particle-orbit { animation: orbit 6s linear infinite; }
+.effect-glow-pulse { animation: glowPulse 3.2s ease-in-out infinite; }
+.effect-drift { animation: drift 4.8s ease-in-out infinite; }
 
 /* Shimmer skeleton */
 .skeleton {
@@ -187,13 +147,8 @@ body {
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Active press effect */
@@ -222,7 +177,7 @@ body {
 }
 
 .pb-nav {
-  padding-bottom: calc(72px + max(8px, env(safe-area-inset-bottom)));
+  padding-bottom: calc(68px + max(8px, env(safe-area-inset-bottom)));
 }
 
 /* Blur backdrop */
@@ -236,32 +191,33 @@ body {
   background: rgba(108, 99, 255, 0.08);
   border: 1px solid rgba(108, 99, 255, 0.25);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   box-shadow: 0 0 20px rgba(108, 99, 255, 0.1);
+  overflow-x: auto;
 }
 
 /* Hide scrollbar but keep scroll */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Page enter animation */
 .page-enter {
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Ensure text doesn't overflow containers */
+.break-word {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 @layer components {
   .btn-primary {
-    @apply bg-primary hover:bg-primary/90 active:scale-95 text-white font-semibold py-3.5 px-6 rounded-2xl transition-all duration-150 w-full text-sm tracking-wide shadow-glow-primary;
+    @apply bg-primary hover:bg-primary/90 active:scale-95 text-white font-semibold py-3 px-5 rounded-2xl transition-all duration-150 w-full text-sm tracking-wide shadow-glow-primary;
   }
 
   .btn-secondary {
-    @apply bg-surface-2 hover:bg-surface-2/80 active:scale-95 text-text-1 font-semibold py-3.5 px-6 rounded-2xl transition-all duration-150 w-full text-sm border border-border;
+    @apply bg-surface-2 hover:bg-surface-2/80 active:scale-95 text-text-1 font-semibold py-3 px-5 rounded-2xl transition-all duration-150 w-full text-sm border border-border;
   }
 
   .card {
@@ -269,10 +225,10 @@ body {
   }
 
   .chip {
-    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap;
+    @apply px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap;
   }
 
   .tab-item {
-    @apply flex flex-col items-center gap-0.5 py-2 px-3 transition-all duration-200;
+    @apply flex flex-col items-center gap-0.5 py-1.5 px-2 transition-all duration-200;
   }
 }

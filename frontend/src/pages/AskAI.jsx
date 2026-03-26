@@ -7,10 +7,10 @@ import { aiAPI } from '../api/ai'
 import { useUserStore } from '../store/userStore'
 
 const EXAMPLES = [
-  "Ньютонның 2-заңын түсіндір",
-  "Кинетикалық энергия формуласы",
-  "Омның заңы дегеніміз не?",
-  "Жарық жылдамдығы неше?",
+  "Пайыздық есеп қалай шығарамын?",
+  "Функция графигін түсіндір",
+  "Шеңбер ауданы қалай?",
+  "Орташа мән мен медиана",
 ]
 
 const hasFormula = (text) =>
@@ -19,7 +19,7 @@ const hasFormula = (text) =>
 
 export default function AskAI() {
   const { user } = useUserStore()
-  const WELCOME = { role: 'assistant', content: 'Сәлем! Мен физика репетиторымын. Қазақ тілінде жауап беремін. Кез келген физика сұрағыңды жаз!' }
+  const WELCOME = { role: 'assistant', content: 'Сәлем! Мен математика репетиторымын. Қазақ тілінде жауап беремін. Кез келген математика сұрағыңды жаз!' }
   const [messages, setMessages] = useState([WELCOME])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -50,24 +50,24 @@ export default function AskAI() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-bg page-enter">
+    <div className="flex flex-col bg-bg page-enter h-screen-safe">
       <TopBar />
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 pb-4 no-scrollbar">
+      <div className="flex-1 overflow-y-auto px-3 py-2 no-scrollbar">
         {messages.map((msg, i) => {
           const isUser = msg.role === 'user'
           return (
-            <div key={i} className={`flex mb-3 ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+            <div key={i} className={`flex mb-2.5 ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`}>
               {!isUser && (
-                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center mr-2 flex-shrink-0 mt-auto shadow-glow-primary">
-                  <Bot size={16} strokeWidth={1.5} className="text-white" />
+                <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center mr-1.5 flex-shrink-0 mt-auto shadow-glow-primary">
+                  <Bot size={14} strokeWidth={1.5} className="text-white" />
                 </div>
               )}
-              <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              <div className={`max-w-[80%] rounded-2xl px-3 py-2.5 text-xs leading-relaxed ${
                 isUser ? 'bg-primary text-white rounded-br-sm' : 'bg-surface border border-border text-text-1 rounded-bl-sm'}`}>
                 {!isUser && hasFormula(msg.content)
                   ? <FormulaRenderer text={msg.content} />
-                  : <span className="whitespace-pre-wrap">{msg.content}</span>
+                  : <span className="whitespace-pre-wrap break-word">{msg.content}</span>
                 }
               </div>
             </div>
@@ -75,15 +75,15 @@ export default function AskAI() {
         })}
 
         {messages.length === 1 && (
-          <div className="mt-4 animate-fade-in">
-            <div className="flex items-center gap-1.5 justify-center mb-3">
-              <Sparkles size={14} strokeWidth={1.5} className="text-text-3" />
-              <p className="text-xs text-text-3">Мысал сұрақтар</p>
+          <div className="mt-3 animate-fade-in">
+            <div className="flex items-center gap-1 justify-center mb-2">
+              <Sparkles size={12} strokeWidth={1.5} className="text-text-3" />
+              <p className="text-[10px] text-text-3">Мысал сұрақтар</p>
             </div>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-1.5 justify-center">
               {EXAMPLES.map((q, i) => (
                 <button key={i} onClick={() => send(q)}
-                  className="text-xs bg-surface text-primary border border-primary/25 rounded-full px-3 py-1.5 pressable">
+                  className="text-[11px] bg-surface text-primary border border-primary/25 rounded-full px-2.5 py-1 pressable">
                   {q}
                 </button>
               ))}
@@ -92,13 +92,13 @@ export default function AskAI() {
         )}
 
         {loading && (
-          <div className="flex justify-start mb-3 animate-fade-in">
-            <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center mr-2 flex-shrink-0">
-              <Bot size={16} strokeWidth={1.5} className="text-white" />
+          <div className="flex justify-start mb-2.5 animate-fade-in">
+            <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center mr-1.5 flex-shrink-0">
+              <Bot size={14} strokeWidth={1.5} className="text-white" />
             </div>
-            <div className="bg-surface border border-border rounded-2xl rounded-bl-sm px-4 py-3.5">
-              <div className="flex gap-1.5">{[0,1,2].map(i => (
-                <div key={i} className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: `${i * 0.18}s` }} />
+            <div className="bg-surface border border-border rounded-2xl rounded-bl-sm px-3 py-2.5">
+              <div className="flex gap-1">{[0,1,2].map(i => (
+                <div key={i} className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: `${i * 0.18}s` }} />
               ))}</div>
             </div>
           </div>
@@ -106,17 +106,17 @@ export default function AskAI() {
         <div ref={endRef} />
       </div>
 
-      <div className="px-4 pt-2 border-t border-border" style={{ paddingBottom: 'calc(72px + max(8px, env(safe-area-inset-bottom)))' }}>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 bg-surface border border-border rounded-2xl px-4 py-3">
+      <div className="px-3 pt-1.5 border-t border-border flex-shrink-0" style={{ paddingBottom: 'calc(64px + max(4px, env(safe-area-inset-bottom)))' }}>
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1 bg-surface border border-border rounded-xl px-3 py-2.5">
             <input type="text" value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && send()}
-              placeholder="Физика сұрағыңды жаз..."
-              className="w-full bg-transparent text-text-1 text-sm outline-none placeholder:text-text-3" />
+              placeholder="Математика сұрағыңды жаз..."
+              className="w-full bg-transparent text-text-1 text-xs outline-none placeholder:text-text-3" />
           </div>
           <button onClick={() => send()} disabled={!input.trim() || loading}
-            className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-glow-primary disabled:opacity-30 disabled:shadow-none pressable flex-shrink-0">
-            <Send size={18} strokeWidth={2} className="text-white" />
+            className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-glow-primary disabled:opacity-30 disabled:shadow-none pressable flex-shrink-0">
+            <Send size={16} strokeWidth={2} className="text-white" />
           </button>
         </div>
       </div>

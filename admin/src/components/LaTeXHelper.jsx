@@ -1,4 +1,4 @@
-const FORMULAS = ['F = ma', 'v = v_0 + at', 's = v_0t + \\frac{at^2}{2}', 'p = mv', 'E_k = \\frac{mv^2}{2}']
+const FORMULAS = ['ax^2 + bx + c = 0', 'x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}', 'S = \\pi r^2', 'P = \\frac{f}{n}', '\\bar{x} = \\frac{\\sum x_i}{n}']
 
 export default function LaTeXHelper({ onInsert }) {
     return (

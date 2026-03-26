@@ -114,9 +114,9 @@ export default function Users() {
             onChange={(event) => setFilters((prev) => ({ ...prev, level: event.target.value }))}
           >
             <option value="">Барлық деңгей</option>
-            <option value="easy">Жеңіл</option>
-            <option value="medium">Орта</option>
-            <option value="hard">Күрделі</option>
+            {[1, 2, 3, 4, 5, 6].map((lvl) => (
+              <option key={lvl} value={String(lvl)}>{lvl}-деңгей</option>
+            ))}
           </select>
           <select
             className="input"

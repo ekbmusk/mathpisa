@@ -21,7 +21,7 @@ class UserOut(BaseModel):
     last_name: Optional[str]
     score: int
     streak: int
-    level: str = "medium"
+    level: str = "3"
     notifications_enabled: bool = True
     created_at: datetime
     is_new: bool = False
@@ -31,7 +31,7 @@ class UserOut(BaseModel):
 
 class LevelUpdate(BaseModel):
     telegram_id: int
-    level: str  # easy | medium | hard
+    level: str  # PISA levels 1-6
 
 
 class NotificationToggle(BaseModel):

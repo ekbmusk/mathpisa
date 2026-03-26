@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import BigInteger, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database.database import Base
@@ -8,7 +8,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(Integer, unique=True, index=True, nullable=False)
+    telegram_id = Column(BigInteger, unique=True, index=True, nullable=False)
     username = Column(String, nullable=True)
     photo_url = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
@@ -17,7 +17,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     score = Column(Integer, default=0)
     streak = Column(Integer, default=0)
-    level = Column(String, default="medium")
+    level = Column(String, default="3")
     is_admin = Column(Boolean, default=False)
     is_banned = Column(Boolean, default=False)
     notifications_enabled = Column(Boolean, default=True)
@@ -28,6 +28,8 @@ class User(Base):
 
     test_results = relationship("TestResult", back_populates="user", cascade="all, delete")
     progress_records = relationship("Progress", back_populates="user", cascade="all, delete")
+    topic_mastery_records = relationship("TopicMastery", back_populates="user", cascade="all, delete")
+    achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete")
 
     @property
     def full_name(self):

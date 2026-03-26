@@ -13,7 +13,7 @@ from aiogram.types import (
 from aiogram.filters import CommandStart, Command
 
 from config import BACKEND_URL, MINI_APP_URL
-from keyboards.main_kb import get_main_keyboard
+from keyboards.main_keyboard import get_main_keyboard
 from keyboards.inline_kb import open_app_button, profile_keyboard
 
 router = Router()
@@ -40,15 +40,18 @@ def _format_user_mention(entry: dict) -> str:
 
 
 def _start_inline_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Қосымшаны ашу", web_app=WebAppInfo(url=MINI_APP_URL))],
-            [
-                InlineKeyboardButton(text="📖 Нұсқаулық", callback_data="help"),
-                InlineKeyboardButton(text="🏆 Рейтинг", callback_data="rating"),
-            ],
-        ]
-    )
+    buttons = []
+    if MINI_APP_URL:
+        buttons.append([InlineKeyboardButton(text="📐 Қосымшаны ашу", web_app=WebAppInfo(url=MINI_APP_URL))])
+    buttons.append([
+        InlineKeyboardButton(text="📖 Нұсқаулық", callback_data="help"),
+        InlineKeyboardButton(text="🏆 Рейтинг", callback_data="rating"),
+    ])
+    buttons.append([
+        InlineKeyboardButton(text="👤 Профиль", callback_data="profile"),
+        InlineKeyboardButton(text="🔥 Streak", callback_data="streak"),
+    ])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 async def _register_user(user) -> tuple[bool, dict | None]:
@@ -87,7 +90,10 @@ async def _get_user_stats(telegram_id: int) -> dict:
             return {
                 "streak": progress.get("streak", 0),
                 "problems_solved": progress.get("problems_solved", 0),
+                "tests_taken": progress.get("tests_taken", 0),
+                "avg_score": progress.get("avg_score", 0),
                 "rank": my_rank.get("rank"),
+                "score": my_rank.get("score", 0),
             }
     except Exception:
         return {}
@@ -118,34 +124,45 @@ async def cmd_start(message: Message):
     if not is_new:
         stats = await _get_user_stats(user.id)
 
-    # Build welcome text
     if is_new or not stats:
         text = (
-            f"🎓 <b>Физика Оқу Боты</b>\n\n"
+            f"📐 <b>Математика PISA Боты</b>\n"
+            f"━━━━━━━━━━━━━━━━━\n\n"
             f"Сәлем, <b>{first_name}</b>! 👋\n\n"
-            f"Бұл бот саған физиканы оңай үйренуге көмектеседі:\n\n"
-            f"📘 <b>Теория</b> — түсінікті түсіндірмелер + формулалар\n"
-            f"🧮 <b>Есептер</b> — 3 деңгей: жеңіл → күрделі\n"
-            f"🧠 <b>Тесттер</b> — өзіңді тексер\n"
+            f"Бұл бот PISA математикасын оңай үйренуге көмектеседі:\n\n"
+            f"📘 <b>Теория</b> — 4 PISA домені, формулалар\n"
+            f"🧮 <b>Есептер</b> — 6 деңгей: жеңіл → күрделі\n"
+            f"🧠 <b>Тесттер</b> — 10 сұрақ, таймермен\n"
             f"🤖 <b>AI репетитор</b> — кез келген сұраққа жауап\n"
-            f"🏆 <b>Рейтинг</b> — достарыңмен бәсекелес\n\n"
-            f"━━━━━━━━━━━━━━━\n"
-            f"👇 <b>Бастау үшін батырманы басыңыз</b>"
+            f"🏆 <b>Рейтинг</b> — достарыңмен бәсекелес\n"
+            f"🔥 <b>Streak</b> — күн сайын оқы, жолақ жина\n\n"
+            f"━━━━━━━━━━━━━━━━━\n"
+            f"👇 <b>Бастау үшін батырманы басыңыз!</b>"
         )
     else:
         rank_str = f"#{stats['rank']}" if stats.get("rank") else "—"
         text = (
+            f"📐 <b>Математика PISA Боты</b>\n"
+            f"━━━━━━━━━━━━━━━━━\n\n"
             f"Қош келдіңіз қайта, <b>{first_name}</b>! 🎉\n\n"
+            f"📊 <b>Сіздің статистика:</b>\n"
             f"🔥 Streak: <b>{stats.get('streak', 0)} күн</b>\n"
-            f"✅ Шешілген есептер: <b>{stats.get('problems_solved', 0)}</b>\n"
-            f"🏆 Рейтингтегі орын: <b>{rank_str}</b>\n\n"
+            f"✅ Есептер: <b>{stats.get('problems_solved', 0)}</b>\n"
+            f"🧠 Тесттер: <b>{stats.get('tests_taken', 0)}</b>\n"
+            f"⭐ Ұпай: <b>{stats.get('score', 0)}</b>\n"
+            f"🏆 Рейтинг: <b>{rank_str}</b>\n\n"
+            f"━━━━━━━━━━━━━━━━━\n"
             f"Жалғастырамыз ба? 💪"
         )
 
-    # Send persistent reply keyboard first
-    await message.answer("👋", reply_markup=get_main_keyboard())
+    # Send persistent reply keyboard
+    await message.answer(
+        "📐 <b>Математика PISA</b> — Мәзір дайын!",
+        parse_mode="HTML",
+        reply_markup=get_main_keyboard(),
+    )
 
-    # Then send welcome card with inline keyboard
+    # Send welcome card with inline keyboard
     if BANNER_PATH.exists():
         await message.answer_photo(
             photo=FSInputFile(str(BANNER_PATH)),
@@ -163,11 +180,17 @@ async def cmd_start(message: Message):
 
 @router.message(Command("app"))
 async def cmd_app(message: Message):
-    await message.answer(
-        "📱 <b>Физика Боты</b> — Mini App:",
-        parse_mode="HTML",
-        reply_markup=open_app_button(),
-    )
+    if MINI_APP_URL:
+        await message.answer(
+            "📐 <b>Математика PISA</b> — Mini App:",
+            parse_mode="HTML",
+            reply_markup=open_app_button(),
+        )
+    else:
+        await message.answer(
+            "⚠️ Mini App URL орнатылмаған.\nАдминге хабарласыңыз.",
+            parse_mode="HTML",
+        )
 
 
 @router.callback_query(F.data == "help")
@@ -197,3 +220,40 @@ async def cb_rating(query: CallbackQuery):
         lines.append(f"{medal} {name} — <b>{score} ұпай</b>")
 
     await query.message.answer("\n".join(lines), parse_mode="HTML")
+
+
+@router.callback_query(F.data == "profile")
+async def cb_profile(query: CallbackQuery):
+    await query.answer()
+    from handlers.profile import _fetch_profile, _build_profile_text
+    data = await _fetch_profile(query.from_user.id)
+    await query.message.answer(
+        _build_profile_text(query.from_user, data),
+        parse_mode="HTML",
+        reply_markup=profile_keyboard(),
+    )
+
+
+@router.callback_query(F.data == "streak")
+async def cb_streak(query: CallbackQuery):
+    await query.answer()
+    from handlers.streak import _fetch_streak, _streak_bar, _streak_message
+    data = await _fetch_streak(query.from_user.id)
+    streak = data.get("streak", 0)
+    bar = _streak_bar(streak)
+    motivation = _streak_message(streak)
+    last_test = data.get("recent_tests", [])
+    last_active = last_test[0]["date"] if last_test else "—"
+
+    text = (
+        f"🔥 <b>Сіздің streak: {streak} күн!</b>\n\n"
+        f"{bar}\n\n"
+        f"{motivation}\n"
+        f"📅 Соңғы белсенділік: <b>{last_active}</b>"
+    )
+    await query.message.answer(text, parse_mode="HTML", reply_markup=open_app_button())
+
+
+@router.callback_query(F.data == "noop")
+async def cb_noop(query: CallbackQuery):
+    await query.answer("Mini App URL орнатылмаған")

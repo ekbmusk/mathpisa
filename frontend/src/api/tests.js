@@ -7,4 +7,5 @@ export const testsAPI = {
   getDailyStatus: (telegramId) => client.get(`/tests/daily/status/${telegramId}`),
   submitTest: (payload) => client.post('/tests/submit', payload),
   getHistory: (telegramId) => client.get(`/tests/history/${telegramId}`),
+  getReview: (resultId) => client.get(`/tests/review/${resultId}`),
 }

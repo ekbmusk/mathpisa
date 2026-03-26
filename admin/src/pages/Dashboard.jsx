@@ -65,7 +65,7 @@ export default function Dashboard() {
         <div className="card h-80 p-4">
           <h3 className="mb-3 text-sm font-semibold">Соңғы 30 күн: жаңа қолданушылар</h3>
           <ResponsiveContainer width="100%" height="90%">
-            <LineChart data={stats.new_users_daily}>
+            <LineChart data={stats.new_users_per_day}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
               <XAxis dataKey="date" stroke="#8B8FA8" />
               <YAxis stroke="#8B8FA8" />
@@ -76,9 +76,9 @@ export default function Dashboard() {
         </div>
 
         <div className="card h-80 p-4">
-          <h3 className="mb-3 text-sm font-semibold">Тақырып бойынша шешілген есептер</h3>
+          <h3 className="mb-3 text-sm font-semibold">Домен бойынша шешілген есептер</h3>
           <ResponsiveContainer width="100%" height="90%">
-            <BarChart data={stats.problems_by_topic}>
+            <BarChart data={stats.problems_solved_per_topic}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
               <XAxis dataKey="topic" stroke="#8B8FA8" />
               <YAxis stroke="#8B8FA8" />

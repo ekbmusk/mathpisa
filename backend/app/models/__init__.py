@@ -6,6 +6,8 @@ from .admin_user import AdminUser
 from .admin_test import AdminTestQuestion
 from .theory_content import TheoryContent
 from .broadcast_log import BroadcastLog
+from .topic_mastery import TopicMastery
+from .achievement import UserAchievement
 
 __all__ = [
 	"User",
@@ -16,4 +18,6 @@ __all__ = [
 	"AdminTestQuestion",
 	"TheoryContent",
 	"BroadcastLog",
+	"TopicMastery",
+	"UserAchievement",
 ]

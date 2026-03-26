@@ -9,6 +9,8 @@ class TestQuestion(BaseModel):
     options: List[str]
     correct_answer: int
     explanation: Optional[str] = None
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
 
 class TestSet(BaseModel):
@@ -27,11 +29,13 @@ class TestSubmit(BaseModel):
 
 
 class TestResultOut(BaseModel):
+    result_id: Optional[int] = None
     correct: int
     total: int
     percentage: float
     passed: bool
     xp_earned: int = 0
     bonus_xp: int = 0
+    new_achievements: list = []
 
     model_config = {"from_attributes": True}

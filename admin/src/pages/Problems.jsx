@@ -7,12 +7,24 @@ import FormulaPreview from '../components/FormulaPreview'
 import LaTeXHelper from '../components/LaTeXHelper'
 import Modal from '../components/Modal'
 
+const PISA_DOMAINS = [
+  { value: 'quantity', label: 'Сан және шама (Quantity)' },
+  { value: 'change_and_relationships', label: 'Өзгерістер мен тәуелділіктер (Change and Relationships)' },
+  { value: 'space_and_shape', label: 'Кеңістік пен пішін (Space and Shape)' },
+  { value: 'uncertainty_and_data', label: 'Анықсыздық пен деректер (Uncertainty and Data)' },
+]
+
+const PISA_LEVELS = [1, 2, 3, 4, 5, 6]
+
 const initialForm = {
-  topic: 'Кинематика',
-  level: 'easy',
+  topic: 'quantity',
+  difficulty: '1',
   question: '',
-  answer: '',
+  correct_answer: '',
+  formula: '',
   solution: '',
+  image_url: '',
+  table_data: null,
 }
 
 export default function Problems() {
@@ -28,11 +40,19 @@ export default function Problems() {
   const columns = useMemo(
     () => [
       { key: 'id', label: 'ID', sortable: true },
-      { key: 'topic', label: 'Тақырып', sortable: true },
       {
-        key: 'level',
-        label: 'Деңгей',
-        render: (row) => ({ easy: 'Жеңіл', medium: 'Орта', hard: 'Күрделі' }[row.level] || row.level),
+        key: 'topic',
+        label: 'Домен',
+        sortable: true,
+        render: (row) => {
+          const domain = PISA_DOMAINS.find((d) => d.value === row.topic)
+          return domain ? domain.label : row.topic
+        },
+      },
+      {
+        key: 'difficulty',
+        label: 'PISA деңгей',
+        render: (row) => `${row.difficulty}-деңгей`,
       },
       { key: 'question', label: 'Сұрақ', render: (row) => <p className="max-w-lg truncate">{row.question}</p> },
     ],
@@ -41,7 +61,7 @@ export default function Problems() {
 
   const load = async () => {
     try {
-      const data = await adminAPI.getProblems({ page, limit: 10, ...filters })
+      const data = await adminAPI.getProblems({ page, page_size: 10, ...filters })
       setItems(data.items || data.results || [])
       setTotal(data.total || 0)
     } catch (error) {
@@ -62,11 +82,14 @@ export default function Problems() {
   const openEdit = (row) => {
     setEditing(row)
     setForm({
-      topic: row.topic || 'Кинематика',
-      level: row.level || 'easy',
+      topic: row.topic || 'quantity',
+      difficulty: row.difficulty || '1',
       question: row.question || '',
-      answer: row.answer || '',
+      correct_answer: row.correct_answer || '',
+      formula: row.formula || '',
       solution: row.solution || '',
+      image_url: row.image_url || '',
+      table_data: row.table_data || null,
     })
     setOpenModal(true)
   }
@@ -115,11 +138,10 @@ export default function Problems() {
             value={filters.topic}
             onChange={(event) => setFilters((prev) => ({ ...prev, topic: event.target.value }))}
           >
-            <option value="">Барлық тақырып</option>
-            <option value="Кинематика">Кинематика</option>
-            <option value="Динамика">Динамика</option>
-            <option value="Статика">Статика</option>
-            <option value="Энергия">Энергия</option>
+            <option value="">Барлық домен</option>
+            {PISA_DOMAINS.map((d) => (
+              <option key={d.value} value={d.value}>{d.label}</option>
+            ))}
           </select>
           <select
             className="input"
@@ -127,9 +149,9 @@ export default function Problems() {
             onChange={(event) => setFilters((prev) => ({ ...prev, level: event.target.value }))}
           >
             <option value="">Барлық деңгей</option>
-            <option value="easy">Жеңіл</option>
-            <option value="medium">Орта</option>
-            <option value="hard">Күрделі</option>
+            {PISA_LEVELS.map((lvl) => (
+              <option key={lvl} value={String(lvl)}>{lvl}-деңгей</option>
+            ))}
           </select>
           <button className="btn-primary" onClick={openCreate} type="button">
             + Есеп қосу
@@ -159,21 +181,25 @@ export default function Problems() {
       <Modal open={openModal} title={editing ? 'Есепті өзгерту' : 'Есеп қосу'} onClose={() => setOpenModal(false)}>
         <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <label className="text-sm text-text-2">Тақырып</label>
-            <input className="input" value={form.topic} onChange={(event) => setForm((prev) => ({ ...prev, topic: event.target.value }))} />
+            <label className="text-sm text-text-2">PISA домені</label>
+            <select className="input" value={form.topic} onChange={(event) => setForm((prev) => ({ ...prev, topic: event.target.value }))}>
+              {PISA_DOMAINS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm text-text-2">Деңгей</label>
+            <label className="text-sm text-text-2">PISA деңгей (1-6)</label>
             <div className="flex gap-2">
-              {['easy', 'medium', 'hard'].map((level) => (
-                <label key={level} className="flex items-center gap-1 text-sm">
+              {PISA_LEVELS.map((lvl) => (
+                <label key={lvl} className="flex items-center gap-1 text-sm">
                   <input
                     type="radio"
-                    checked={form.level === level}
-                    onChange={() => setForm((prev) => ({ ...prev, level }))}
+                    checked={form.difficulty === String(lvl)}
+                    onChange={() => setForm((prev) => ({ ...prev, difficulty: String(lvl) }))}
                   />
-                  {{ easy: 'Жеңіл', medium: 'Орта', hard: 'Күрделі' }[level]}
+                  {lvl}
                 </label>
               ))}
             </div>
@@ -189,18 +215,109 @@ export default function Problems() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm text-text-2">Жауап (LaTeX)</label>
+            <label className="text-sm text-text-2">Дұрыс жауап</label>
             <input
               className="input"
-              value={form.answer}
-              onChange={(event) => setForm((prev) => ({ ...prev, answer: event.target.value }))}
+              value={form.correct_answer}
+              onChange={(event) => setForm((prev) => ({ ...prev, correct_answer: event.target.value }))}
             />
-            <LaTeXHelper onInsert={(formula) => setForm((prev) => ({ ...prev, answer: formula }))} />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm text-text-2">Live preview</label>
-            <FormulaPreview value={form.answer} />
+            <label className="text-sm text-text-2">Формула (LaTeX, міндетті емес)</label>
+            <input
+              className="input"
+              value={form.formula}
+              onChange={(event) => setForm((prev) => ({ ...prev, formula: event.target.value }))}
+            />
+            <LaTeXHelper onInsert={(formula) => setForm((prev) => ({ ...prev, formula }))} />
+            <FormulaPreview value={form.formula} />
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm text-text-2">Сурет URL (міндетті емес)</label>
+            <input
+              className="input"
+              placeholder="https://..."
+              value={form.image_url}
+              onChange={(event) => setForm((prev) => ({ ...prev, image_url: event.target.value }))}
+            />
+            {form.image_url && (
+              <img src={form.image_url} alt="Preview" className="max-h-40 rounded-lg border border-border object-contain" onError={(e) => { e.target.style.display = 'none' }} />
+            )}
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <label className="flex items-center gap-2 text-sm text-text-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!form.table_data}
+                onChange={(e) => setForm((prev) => ({
+                  ...prev,
+                  table_data: e.target.checked ? { headers: ['', ''], rows: [['', '']] } : null,
+                }))}
+              />
+              Кесте қосу
+            </label>
+            {form.table_data && (
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div className="flex gap-2 items-end">
+                  {form.table_data.headers.map((h, i) => (
+                    <input
+                      key={`h-${i}`}
+                      className="input flex-1 !text-xs font-semibold"
+                      placeholder={`Бағана ${i + 1}`}
+                      value={h}
+                      onChange={(e) => {
+                        const headers = [...form.table_data.headers]
+                        headers[i] = e.target.value
+                        setForm((prev) => ({ ...prev, table_data: { ...prev.table_data, headers } }))
+                      }}
+                    />
+                  ))}
+                  <button type="button" className="btn-secondary !px-2 !py-1.5 text-xs" onClick={() => setForm((prev) => ({
+                    ...prev,
+                    table_data: {
+                      ...prev.table_data,
+                      headers: [...prev.table_data.headers, ''],
+                      rows: prev.table_data.rows.map((r) => [...r, '']),
+                    },
+                  }))}>+</button>
+                </div>
+                {form.table_data.rows.map((row, ri) => (
+                  <div key={`r-${ri}`} className="flex gap-2">
+                    {row.map((cell, ci) => (
+                      <input
+                        key={`c-${ri}-${ci}`}
+                        className="input flex-1 !text-xs"
+                        placeholder="—"
+                        value={cell}
+                        onChange={(e) => {
+                          const rows = form.table_data.rows.map((r) => [...r])
+                          rows[ri][ci] = e.target.value
+                          setForm((prev) => ({ ...prev, table_data: { ...prev.table_data, rows } }))
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <button type="button" className="btn-secondary !px-2 !py-1 text-xs" onClick={() => setForm((prev) => ({
+                    ...prev,
+                    table_data: {
+                      ...prev.table_data,
+                      rows: [...prev.table_data.rows, prev.table_data.headers.map(() => '')],
+                    },
+                  }))}>+ Жол</button>
+                  {form.table_data.rows.length > 1 && (
+                    <button type="button" className="text-xs text-danger" onClick={() => setForm((prev) => ({
+                      ...prev,
+                      table_data: { ...prev.table_data, rows: prev.table_data.rows.slice(0, -1) },
+                    }))}>- Жол</button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2 md:col-span-2">

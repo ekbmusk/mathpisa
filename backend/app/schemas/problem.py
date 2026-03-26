@@ -9,6 +9,8 @@ class ProblemOut(BaseModel):
     formula: Optional[str] = None
     difficulty: str
     tags: List[str] = []
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 

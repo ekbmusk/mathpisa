@@ -1,9 +1,11 @@
 import hashlib
+import json
 import os
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -24,7 +26,7 @@ def _jwt_secret() -> str:
 
 
 def hash_password(raw_password: str) -> str:
-    pepper = os.getenv("JWT_SECRET_KEY", "physics-bot-default-pepper")
+    pepper = os.getenv("JWT_SECRET_KEY", "math-pisa-bot-default-pepper")
     return hashlib.sha256(f"{raw_password}:{pepper}".encode("utf-8")).hexdigest()
 
 
@@ -68,3 +70,27 @@ def get_current_admin(
         raise HTTPException(status_code=403, detail="Әкімші қолжетімсіз")
 
     return admin
+
+
+def _extract_telegram_id(request: Request) -> int:
+    init_data = request.headers.get("x-telegram-init-data", "")
+    if not init_data or "user" not in init_data:
+        raise HTTPException(status_code=401, detail="Telegram деректері жоқ")
+    try:
+        params = dict(urllib.parse.parse_qsl(init_data))
+        user_data = json.loads(params.get("user", "{}"))
+        tid = user_data.get("id")
+        if not tid:
+            raise ValueError
+        return int(tid)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Telegram деректері жарамсыз")
+
+
+def get_admin_by_telegram_id(request: Request) -> int:
+    tid = _extract_telegram_id(request)
+    allowed = os.getenv("ADMIN_TELEGRAM_IDS", "")
+    allowed_ids = {int(x.strip()) for x in allowed.split(",") if x.strip()}
+    if tid not in allowed_ids:
+        raise HTTPException(status_code=403, detail="Әкімші құқығы жоқ")
+    return tid

@@ -173,6 +173,8 @@ async def create_problem(
         solution=body.solution,
         difficulty=body.difficulty,
         tags=body.tags,
+        image_url=body.image_url,
+        table_data=body.table_data,
     )
     db.add(new_problem)
     db.commit()
@@ -233,7 +235,7 @@ async def bulk_import_problems(
     errors = []
     for index, row in enumerate(reader, start=2):
         try:
-            if row.get("difficulty") not in {"easy", "medium", "hard"}:
+            if row.get("difficulty") not in {"1", "2", "3", "4", "5", "6"}:
                 raise ValueError("Деңгей жарамсыз")
 
             problem = Problem(
@@ -317,7 +319,7 @@ async def sync_admin_tests_from_bank(
 
         db.add(
             AdminTestQuestion(
-                topic="Жалпы физика",
+                topic=item.get("topic", "quantity"),
                 question=question,
                 option_a=options[0],
                 option_b=options[1],

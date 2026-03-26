@@ -3,17 +3,18 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: physics_backend
+    container_name: math_pisa_backend
     ports:
       - "8000:8000"
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
-      - DATABASE_URL=sqlite:///./data/physics_bot.db
+      - DATABASE_URL=sqlite:///./data/math_pisa_bot.db
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_TELEGRAM_IDS=${ADMIN_TELEGRAM_IDS}
     volumes:
       - ./backend/data:/app/data
     restart: unless-stopped
@@ -28,7 +29,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: physics_frontend
+    container_name: math_pisa_frontend
     ports:
       - "3000:80"
     depends_on:
@@ -40,7 +41,7 @@ services:
     build:
       context: ./admin
       dockerfile: Dockerfile
-    container_name: physics_admin
+    container_name: math_pisa_admin
     ports:
       - "5174:80"
     depends_on:
@@ -52,7 +53,7 @@ services:
     build:
       context: ./bot
       dockerfile: Dockerfile
-    container_name: physics_bot
+    container_name: math_pisa_bot
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - MINI_APP_URL=${MINI_APP_URL}

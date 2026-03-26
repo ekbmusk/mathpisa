@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Literal, Optional
 
 
-VALID_LEVELS = {"easy", "medium", "hard"}
+VALID_LEVELS = {"1", "2", "3", "4", "5", "6"}
 VALID_BLOCK_TYPES = {"text", "formula", "example", "image", "divider"}
 VALID_AUDIENCE = {"all", "active", "inactive", "by_level"}
 
@@ -46,14 +46,16 @@ class ProblemAdminBase(BaseModel):
     formula: Optional[str] = None
     correct_answer: str = Field(min_length=1, max_length=200)
     solution: Optional[str] = None
-    difficulty: str = Field(default="easy")
+    difficulty: str = Field(default="1")
     tags: list[str] = Field(default_factory=list)
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
     @field_validator("difficulty")
     @classmethod
     def validate_level(cls, v: str):
         if v not in VALID_LEVELS:
-            raise ValueError("Деңгей easy/medium/hard болуы тиіс")
+            raise ValueError("Деңгей 1-6 аралығында болуы тиіс")
         return v
 
     @field_validator("formula")
@@ -76,12 +78,14 @@ class ProblemAdminUpdate(BaseModel):
     solution: Optional[str] = None
     difficulty: Optional[str] = None
     tags: Optional[list[str]] = None
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
     @field_validator("difficulty")
     @classmethod
     def validate_level(cls, v: Optional[str]):
         if v and v not in VALID_LEVELS:
-            raise ValueError("Деңгей easy/medium/hard болуы тиіс")
+            raise ValueError("Деңгей 1-6 аралығында болуы тиіс")
         return v
 
     @field_validator("formula")
@@ -101,6 +105,8 @@ class ProblemAdminOut(BaseModel):
     solution: Optional[str]
     difficulty: str
     tags: list[str]
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
@@ -119,6 +125,8 @@ class TestAdminBase(BaseModel):
     option_d: str = Field(min_length=1)
     correct_option: Literal["A", "B", "C", "D"]
     explanation: Optional[str] = None
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
 
 class TestAdminCreate(TestAdminBase):
@@ -134,6 +142,8 @@ class TestAdminUpdate(BaseModel):
     option_d: Optional[str] = None
     correct_option: Optional[Literal["A", "B", "C", "D"]] = None
     explanation: Optional[str] = None
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
 
 
 class TestAdminOut(BaseModel):
@@ -146,6 +156,8 @@ class TestAdminOut(BaseModel):
     option_d: str
     correct_option: str
     explanation: Optional[str]
+    image_url: Optional[str] = None
+    table_data: Optional[dict] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -239,7 +251,7 @@ class BroadcastRequest(BaseModel):
     @classmethod
     def validate_level(cls, v: Optional[str]):
         if v and v not in VALID_LEVELS:
-            raise ValueError("Деңгей easy/medium/hard болуы тиіс")
+            raise ValueError("Деңгей 1-6 аралығында болуы тиіс")
         return v
 
     @model_validator(mode="after")

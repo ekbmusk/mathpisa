@@ -1,41 +1,38 @@
 from aiogram.types import (
     ReplyKeyboardMarkup,
     KeyboardButton,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
     WebAppInfo,
 )
 
+from config import MINI_APP_URL
 
-def get_main_keyboard(mini_app_url: str) -> ReplyKeyboardMarkup:
-    """Main reply keyboard with Mini App button."""
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(
-                    text="📱 Mini App ашу",
-                    web_app=WebAppInfo(url=https://bless-arm-timely-four.trycloudflare.com),
-                )
-            ],
-            [
-                KeyboardButton(text="📊 Прогресс"),
-                KeyboardButton(text="🏆 Рейтинг"),
-            ],
+
+def get_main_keyboard() -> ReplyKeyboardMarkup:
+    """Main reply keyboard with Mini App button and quick actions."""
+    buttons = []
+
+    # Mini App button (only if URL is configured)
+    if MINI_APP_URL:
+        buttons.append([
+            KeyboardButton(
+                text="📐 Mini App ашу",
+                web_app=WebAppInfo(url=MINI_APP_URL),
+            )
+        ])
+
+    buttons.extend([
+        [
+            KeyboardButton(text="👤 Профиль"),
+            KeyboardButton(text="🔥 Streak"),
         ],
+        [
+            KeyboardButton(text="🏆 Рейтинг"),
+            KeyboardButton(text="❓ Көмек"),
+        ],
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=buttons,
         resize_keyboard=True,
         one_time_keyboard=False,
-    )
-
-
-def get_webapp_button(mini_app_url: str) -> InlineKeyboardMarkup:
-    """Inline button to open Mini App."""
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="⚛️ Физика Боты ашу",
-                    web_app=WebAppInfo(url=https://bless-arm-timely-four.trycloudflare.com),
-                )
-            ]
-        ]
     )

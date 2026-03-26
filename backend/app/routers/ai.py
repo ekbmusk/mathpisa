@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from app.services.gemini_service import get_ai_answer
+from app.services.gemini_service import get_ai_answer, _check_rate_limit
 from app.database.database import get_db
 from app.models.chat_history import ChatHistory
 from app.models.user import User
@@ -89,8 +89,11 @@ async def ask_question(body: AskRequest, db: Session = Depends(get_db)):
     if not body.question.strip():
         raise HTTPException(status_code=400, detail="Сұрақ бос болмауы керек")
 
+    if body.telegram_id and not _check_rate_limit(body.telegram_id):
+        raise HTTPException(status_code=429, detail="Тым жиі сұрақ жібердіңіз. Бір минут күтіңіз.")
+
     if _is_jailbreak(body.question):
-        return {"answer": "Мен тек физика сұрақтарына жауап беремін. Физика тақырыбына сұрақ қой — мен көмектесемін! ⚛️"}
+        return {"answer": "Мен тек математика сұрақтарына жауап беремін. PISA математика тақырыбына сұрақ қой — мен көмектесемін! 📐"}
 
     history = []
     student_context = None

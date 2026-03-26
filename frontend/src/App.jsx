@@ -12,8 +12,10 @@ import Progress from './pages/Progress'
 import Rating from './pages/Rating'
 import AskAI from './pages/AskAI'
 import Help from './pages/Help'
+import Achievements from './pages/Achievements'
+import Admin, { ADMIN_IDS } from './pages/Admin'
 
-const NAV_ROUTES = ['/', '/theory', '/problems', '/test', '/ask-ai']
+const NAV_ROUTES = ['/', '/theory', '/problems', '/test', '/ask-ai', '/admin']
 
 function AppInner() {
   const location = useLocation()
@@ -31,6 +33,8 @@ function AppInner() {
           <Route path="/rating" element={<Rating />} />
           <Route path="/ask-ai" element={<AskAI />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </div>
       {showNav && <BottomNav />}

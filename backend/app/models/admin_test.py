@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Column, DateTime, Integer, JSON, String, Text
 
 from app.database.database import Base
 
@@ -16,7 +16,10 @@ class AdminTestQuestion(Base):
     option_c = Column(Text, nullable=False)
     option_d = Column(Text, nullable=False)
     correct_option = Column(String, nullable=False)
+    difficulty = Column(String, default="3")
     explanation = Column(Text, nullable=True)
+    image_url = Column(String, nullable=True)
+    table_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
         DateTime,

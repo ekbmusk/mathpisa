@@ -12,8 +12,11 @@ class TopicProgress(BaseModel):
 
 
 class RecentTest(BaseModel):
+    id: int
     date: str
     score: float
+    correct: int = 0
+    total: int = 0
 
 
 class ProgressOut(BaseModel):
@@ -21,6 +24,7 @@ class ProgressOut(BaseModel):
     avg_score: float
     problems_solved: int
     streak: int
+    total_score: int
     topics: List[TopicProgress]
     recent_tests: List[RecentTest]
 

@@ -1,8 +1,8 @@
-# ⚛️ Physics Bot — Telegram Mini App for Learning Physics
+# 📐 Math PISA Bot — Telegram Mini App for PISA Math Preparation
 
-Physics Bot is a Telegram Mini App designed for school-level physics learning. The user-facing experience is in Kazakh, while the engineering workflow and docs are in English.
+Math PISA Bot is a Telegram Mini App designed for school-level math learning based on the PISA assessment model. The user-facing experience is in Kazakh, while the engineering workflow and docs are in English.
 
-It combines a React web app, a FastAPI backend, a Telegram bot (aiogram), and optional AI tutoring through OpenAI.
+It combines a React web app, a FastAPI backend, a Telegram bot (aiogram), and AI tutoring through Groq.
 
 ## Table of Contents
 
@@ -27,8 +27,8 @@ It combines a React web app, a FastAPI backend, a Telegram bot (aiogram), and op
 
 ## Project Goals
 
-- Make physics content accessible in Kazakh.
-- Provide theory, practice, and testing in one flow.
+- Make PISA math content accessible in Kazakh.
+- Provide theory, practice, and testing aligned with PISA math domains.
 - Track learning progress and motivation via streak/rating.
 - Offer AI-assisted explanations with math formulas.
 
@@ -41,14 +41,14 @@ It combines a React web app, a FastAPI backend, a Telegram bot (aiogram), and op
 | Backend API | FastAPI, Pydantic |
 | Database | SQLite, SQLAlchemy |
 | Telegram Bot | aiogram 3 |
-| AI Integration | OpenAI GPT-4o (proxy through backend) |
+| AI Integration | Groq (llama-3.3-70b) |
 | Formula Rendering | KaTeX |
 | Deployment | Docker Compose |
 
 ## Core Features
 
-- 📘 Theory topics by section (mechanics, thermodynamics, electromagnetism, optics, quantum, nuclear).
-- 🧮 Problems by difficulty (`easy`, `medium`, `hard`).
+- 📘 Theory topics by PISA math domain (Quantity, Change & Relationships, Space & Shape, Uncertainty & Data).
+- 🧮 Problems by PISA competency level (1–6).
 - 🧠 Randomized tests with instant scoring.
 - 📊 Progress tracking (scores, solved tasks, streak).
 - 🏆 Leaderboard/rating views.
@@ -62,13 +62,13 @@ End-to-end flow:
 1. User opens Telegram bot and launches Mini App.
 2. Frontend reads Telegram WebApp context and calls backend APIs.
 3. Backend validates requests, reads/writes database, and returns content/results.
-4. AI requests are proxied through backend service (OpenAI key stays server-side).
+4. AI requests are proxied through backend service (API key stays server-side).
 5. Bot handlers provide command UX and messaging outside Mini App screens.
 
 ## Project Structure
 
 ```text
-physics-bot/
+math-pisa-bot/
 ├── frontend/            # Telegram Mini App (React)
 ├── backend/             # FastAPI application
 │   └── app/
@@ -148,12 +148,12 @@ BOT_TOKEN=
 TELEGRAM_BOT_TOKEN=
 MINI_APP_URL=https://your-public-miniapp-url
 
-# OpenAI
-OPENAI_API_KEY=
+# AI (Groq)
+GROQ_API_KEY=
 
 # Backend
 BACKEND_URL=http://localhost:8000
-DATABASE_URL=sqlite:///./physics_bot.db
+DATABASE_URL=sqlite:///./math_pisa_bot.db
 
 # Admin auth
 ADMIN_USERNAME=admin
@@ -201,20 +201,20 @@ Set the generated HTTPS URL as `MINI_APP_URL` and in BotFather settings.
 
 Main route groups in backend:
 
-- `/theory` — topic list/content
-- `/problems` — filtering, random, checks
+- `/theory` — PISA math domain topics/content
+- `/problems` — filtering by domain and level, answer checks
 - `/tests` — random test generation, submit result
 - `/progress` — user learning stats updates
 - `/rating` — leaderboard/top users
-- `/ai` — AI tutoring endpoint (OpenAI proxy)
+- `/ai` — AI tutoring endpoint
 - `/admin` — protected admin operations
 
 Example endpoints used by the app:
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/theory/topics` | Get theory topic list |
-| GET | `/api/theory/topics/{id}` | Get topic content |
+| GET | `/api/theory/topics` | Get PISA math domain list |
+| GET | `/api/theory/topics/{id}` | Get domain content |
 | GET | `/api/problems` | Get problems with filters |
 | POST | `/api/problems/{id}/check` | Validate answer |
 | GET | `/api/tests/random` | Fetch random quiz |
@@ -227,8 +227,8 @@ Example endpoints used by the app:
 
 The admin app is intended for content and operations management:
 
-- Manage theory content blocks
-- Manage problems/tests
+- Manage theory content blocks by PISA domain
+- Manage problems/tests with PISA levels 1–6
 - Review users and progress summaries
 - Send notifications/broadcasts
 
@@ -254,9 +254,9 @@ Recommended: run admin behind authentication and only over trusted networks in d
 - Check `MINI_APP_URL` points to active HTTPS frontend.
 - Inspect browser devtools console for runtime errors.
 
-### OpenAI request fails
+### AI request fails
 
-- Verify `OPENAI_API_KEY` and account access to model.
+- Verify `GROQ_API_KEY` and account access.
 - Check backend logs for upstream API errors/timeouts.
 
 ### CORS errors
@@ -274,14 +274,15 @@ Recommended: run admin behind authentication and only over trusted networks in d
 - Rotate tokens/keys if they were exposed.
 - Replace default admin credentials before any deployment.
 - Restrict CORS origins in production.
-- Keep OpenAI key server-side only (never expose in frontend bundle).
+- Keep API keys server-side only (never expose in frontend bundle).
 
 ## Roadmap Ideas
 
-- Adaptive difficulty based on user performance
+- Adaptive difficulty based on PISA competency level performance
 - Richer analytics dashboard and achievements
 - Content localization tooling for educators
 - Scheduled weekly challenge tests
+- PISA-style real-world context problems
 
 ## License
 

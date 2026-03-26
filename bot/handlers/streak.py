@@ -24,7 +24,7 @@ def _streak_message(streak: int) -> str:
         return "Үздіксіз оқып жатырсыз! 🔥"
     if streak < 30:
         return "Керемет нәтиже! Тоқтамаңыз! 🚀"
-    return "Сіз — физика чемпионысыз! 🏆"
+    return "Сіз — математика чемпионысыз! 🏆"
 
 
 async def _fetch_streak(telegram_id: int) -> dict:

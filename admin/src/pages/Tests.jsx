@@ -5,12 +5,21 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import DataTable from '../components/DataTable'
 import Modal from '../components/Modal'
 
+const PISA_DOMAINS = [
+    { value: 'quantity', label: 'Сан және шама (Quantity)' },
+    { value: 'change_and_relationships', label: 'Өзгерістер мен тәуелділіктер (Change and Relationships)' },
+    { value: 'space_and_shape', label: 'Кеңістік пен пішін (Space and Shape)' },
+    { value: 'uncertainty_and_data', label: 'Анықсыздық пен деректер (Uncertainty and Data)' },
+]
+
 const initialForm = {
-    topic: 'Кинематика',
+    topic: 'quantity',
     question: '',
     options: ['', '', '', ''],
     correct_option: 'A',
     explanation: '',
+    image_url: '',
+    table_data: null,
 }
 
 export default function Tests() {
@@ -27,7 +36,15 @@ export default function Tests() {
     const columns = useMemo(
         () => [
             { key: 'id', label: 'ID', sortable: true },
-            { key: 'topic', label: 'Тақырып', sortable: true },
+            {
+                key: 'topic',
+                label: 'Домен',
+                sortable: true,
+                render: (row) => {
+                    const domain = PISA_DOMAINS.find((d) => d.value === row.topic)
+                    return domain ? domain.label : row.topic
+                },
+            },
             { key: 'question', label: 'Сұрақ', render: (row) => <p className="max-w-xl truncate">{row.question}</p> },
             { key: 'correct_option', label: 'Дұрыс жауап' },
         ],
@@ -69,11 +86,13 @@ export default function Tests() {
     const openEdit = (row) => {
         setEditing(row)
         setForm({
-            topic: row.topic || 'Кинематика',
+            topic: row.topic || 'quantity',
             question: row.question || '',
             options: row.options || ['', '', '', ''],
             correct_option: row.correct_option || 'A',
             explanation: row.explanation || '',
+            image_url: row.image_url || '',
+            table_data: row.table_data || null,
         })
         setOpenModal(true)
     }
@@ -87,6 +106,8 @@ export default function Tests() {
         option_d: state.options[3] || '',
         correct_option: state.correct_option,
         explanation: state.explanation,
+        image_url: state.image_url || null,
+        table_data: state.table_data || null,
     })
 
     const onSubmit = async (event) => {
@@ -142,7 +163,7 @@ export default function Tests() {
     }
 
     const downloadTemplate = () => {
-        const csv = 'topic,question,option_a,option_b,option_c,option_d,correct_answer,explanation\nКинематика,Жылдамдық формуласы?,s/t,v/t,F/m,m/a,A,Қарапайым сұрақ'
+        const csv = 'topic,question,option_a,option_b,option_c,option_d,correct_answer,explanation\nquantity,2/3 + 1/4 нәтижесі қандай?,11/12,3/7,5/7,8/12,A,Бөлшектерді қосу'
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
@@ -167,11 +188,10 @@ export default function Tests() {
                         value={filters.topic}
                         onChange={(event) => setFilters((prev) => ({ ...prev, topic: event.target.value }))}
                     >
-                        <option value="">Барлық тақырып</option>
-                        <option value="Кинематика">Кинематика</option>
-                        <option value="Динамика">Динамика</option>
-                        <option value="Статика">Статика</option>
-                        <option value="Энергия">Энергия</option>
+                        <option value="">Барлық домен</option>
+                        {PISA_DOMAINS.map((d) => (
+                            <option key={d.value} value={d.value}>{d.label}</option>
+                        ))}
                     </select>
                     <button className="btn-secondary" onClick={downloadTemplate} type="button">
                         CSV үлгісі
@@ -215,8 +235,12 @@ export default function Tests() {
                 <form className="space-y-4" onSubmit={onSubmit}>
                     <div className="grid gap-3 md:grid-cols-2">
                         <div>
-                            <label className="mb-1.5 block text-sm text-text-2">Тақырып</label>
-                            <input className="input" value={form.topic} onChange={(event) => setForm((prev) => ({ ...prev, topic: event.target.value }))} />
+                            <label className="mb-1.5 block text-sm text-text-2">PISA домені</label>
+                            <select className="input" value={form.topic} onChange={(event) => setForm((prev) => ({ ...prev, topic: event.target.value }))}>
+                                {PISA_DOMAINS.map((d) => (
+                                    <option key={d.value} value={d.value}>{d.label}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label className="mb-1.5 block text-sm text-text-2">Дұрыс жауап</label>
@@ -259,6 +283,92 @@ export default function Tests() {
                                 />
                             </div>
                         ))}
+                    </div>
+
+                    <div>
+                        <label className="mb-1.5 block text-sm text-text-2">Сурет URL (міндетті емес)</label>
+                        <input
+                            className="input"
+                            placeholder="https://..."
+                            value={form.image_url}
+                            onChange={(event) => setForm((prev) => ({ ...prev, image_url: event.target.value }))}
+                        />
+                        {form.image_url && (
+                            <img src={form.image_url} alt="Preview" className="mt-2 max-h-40 rounded-lg border border-border object-contain" onError={(e) => { e.target.style.display = 'none' }} />
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="flex items-center gap-2 text-sm text-text-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={!!form.table_data}
+                                onChange={(e) => setForm((prev) => ({
+                                    ...prev,
+                                    table_data: e.target.checked ? { headers: ['', ''], rows: [['', '']] } : null,
+                                }))}
+                            />
+                            Кесте қосу
+                        </label>
+                        {form.table_data && (
+                            <div className="mt-2 space-y-2 rounded-lg border border-border p-3">
+                                <div className="flex gap-2 items-end">
+                                    {form.table_data.headers.map((h, i) => (
+                                        <input
+                                            key={`h-${i}`}
+                                            className="input flex-1 !text-xs font-semibold"
+                                            placeholder={`Бағана ${i + 1}`}
+                                            value={h}
+                                            onChange={(e) => {
+                                                const headers = [...form.table_data.headers]
+                                                headers[i] = e.target.value
+                                                setForm((prev) => ({ ...prev, table_data: { ...prev.table_data, headers } }))
+                                            }}
+                                        />
+                                    ))}
+                                    <button type="button" className="btn-secondary !px-2 !py-1.5 text-xs" onClick={() => setForm((prev) => ({
+                                        ...prev,
+                                        table_data: {
+                                            ...prev.table_data,
+                                            headers: [...prev.table_data.headers, ''],
+                                            rows: prev.table_data.rows.map((r) => [...r, '']),
+                                        },
+                                    }))}>+</button>
+                                </div>
+                                {form.table_data.rows.map((row, ri) => (
+                                    <div key={`r-${ri}`} className="flex gap-2">
+                                        {row.map((cell, ci) => (
+                                            <input
+                                                key={`c-${ri}-${ci}`}
+                                                className="input flex-1 !text-xs"
+                                                placeholder="—"
+                                                value={cell}
+                                                onChange={(e) => {
+                                                    const rows = form.table_data.rows.map((r) => [...r])
+                                                    rows[ri][ci] = e.target.value
+                                                    setForm((prev) => ({ ...prev, table_data: { ...prev.table_data, rows } }))
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                ))}
+                                <div className="flex gap-2">
+                                    <button type="button" className="btn-secondary !px-2 !py-1 text-xs" onClick={() => setForm((prev) => ({
+                                        ...prev,
+                                        table_data: {
+                                            ...prev.table_data,
+                                            rows: [...prev.table_data.rows, prev.table_data.headers.map(() => '')],
+                                        },
+                                    }))}>+ Жол</button>
+                                    {form.table_data.rows.length > 1 && (
+                                        <button type="button" className="text-xs text-danger" onClick={() => setForm((prev) => ({
+                                            ...prev,
+                                            table_data: { ...prev.table_data, rows: prev.table_data.rows.slice(0, -1) },
+                                        }))}>- Жол</button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div>

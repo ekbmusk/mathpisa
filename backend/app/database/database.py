@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./physics_bot.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./math_pisa_bot.db")
 
 engine = create_engine(
     DATABASE_URL,
@@ -27,11 +27,21 @@ def get_db():
 def create_tables():
     from app.models import user, problem, test_result, progress as prog  # noqa
     from app.models import admin_user, admin_test, theory_content, broadcast_log, chat_history  # noqa
+    from app.models import topic_mastery  # noqa
     Base.metadata.create_all(bind=engine)
     _migrate_sqlite()
     _seed_admin_user()
     _seed_admin_tests()
     _seed_theory_content()
+    _seed_visual_content()
+
+
+def _seed_visual_content():
+    from app.database.seed_visual_content import seed_visual_content
+    try:
+        seed_visual_content()
+    except Exception:
+        pass
 
 
 def _migrate_sqlite():
@@ -40,13 +50,18 @@ def _migrate_sqlite():
         return
 
     migrations = [
-        ("users", "level",                  "VARCHAR DEFAULT 'medium'"),
+        ("users", "level",                  "VARCHAR DEFAULT '3'"),
         ("users", "is_admin",               "BOOLEAN DEFAULT 0"),
         ("users", "is_banned",              "BOOLEAN DEFAULT 0"),
         ("users", "notifications_enabled",  "BOOLEAN DEFAULT 1"),
         ("users", "notification_sent_at",   "DATETIME"),
         ("users", "photo_url",              "VARCHAR"),
         ("users", "last_daily_date",        "VARCHAR"),
+        ("admin_test_questions", "difficulty", "VARCHAR DEFAULT '3'"),
+        ("problems", "image_url", "VARCHAR"),
+        ("problems", "table_data", "TEXT"),
+        ("admin_test_questions", "image_url", "VARCHAR"),
+        ("admin_test_questions", "table_data", "TEXT"),
     ]
 
     with engine.connect() as conn:
@@ -61,6 +76,33 @@ def _migrate_sqlite():
             except Exception:
                 # Column already exists — safe to ignore
                 pass
+
+        # Normalize topic IDs from Kazakh names to English IDs
+        topic_renames = {
+            "Сан және шама": "quantity",
+            "Өзгерістер мен тәуелділіктер": "change_and_relationships",
+            "Кеңістік пен пішін": "space_and_shape",
+            "Анықсыздық пен деректер": "uncertainty_and_data",
+        }
+        sa = __import__("sqlalchemy")
+        for old_name, new_id in topic_renames.items():
+            try:
+                conn.execute(sa.text("UPDATE problems SET topic = :new WHERE topic = :old"), {"new": new_id, "old": old_name})
+                conn.commit()
+            except Exception:
+                pass
+
+        # Fix admin_test_questions topics: remap "Жалпы математика" to proper IDs from TEST_BANK
+        try:
+            from app.routers.tests import TEST_BANK
+            for item in TEST_BANK:
+                q = item.get("question", "")
+                tid = item.get("topic", "quantity")
+                if q:
+                    conn.execute(sa.text("UPDATE admin_test_questions SET topic = :tid WHERE question = :q AND topic != :tid"), {"tid": tid, "q": q})
+            conn.commit()
+        except Exception:
+            pass
 
 
 def _seed_admin_user():
@@ -88,12 +130,10 @@ def _seed_theory_content():
     from app.models.theory_content import TheoryContent
 
     seeds = [
-        {"topic_id": "mechanics", "title": "Механика"},
-        {"topic_id": "thermodynamics", "title": "Термодинамика"},
-        {"topic_id": "electromagnetism", "title": "Электромагнетизм"},
-        {"topic_id": "optics", "title": "Оптика"},
-        {"topic_id": "quantum", "title": "Кванттық физика"},
-        {"topic_id": "nuclear", "title": "Ядролық физика"},
+        {"topic_id": "quantity", "title": "Сан және шама"},
+        {"topic_id": "change_and_relationships", "title": "Өзгерістер мен тәуелділіктер"},
+        {"topic_id": "space_and_shape", "title": "Кеңістік пен пішін"},
+        {"topic_id": "uncertainty_and_data", "title": "Анықсыздық пен деректер"},
     ]
 
     with SessionLocal() as db:
@@ -125,7 +165,7 @@ def _seed_admin_tests():
 
             db.add(
                 AdminTestQuestion(
-                    topic="Жалпы физика",
+                    topic=item.get("topic", "Жалпы математика"),
                     question=item.get("question", ""),
                     option_a=options[0],
                     option_b=options[1],

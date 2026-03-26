@@ -18,7 +18,6 @@ async def get_leaderboard(
     limit: int = Query(50),
     db: Session = Depends(get_db),
 ):
-    # Use naive UTC to match SQLite's timezone-unaware storage
     now = datetime.utcnow()
     if period == "week":
         since = now - timedelta(days=7)
@@ -33,18 +32,19 @@ async def get_leaderboard(
         User.last_name,
         User.username,
         User.photo_url,
+        User.score,
         func.count(TestResult.id).label("tests_taken"),
-        func.coalesce(func.sum(TestResult.percentage), 0).label("total_score"),
-    ).join(TestResult, TestResult.user_id == User.id, isouter=True)
+        func.coalesce(func.avg(TestResult.percentage), 0).label("avg_score"),
+    ).join(TestResult, TestResult.user_id == User.id)
 
     if since:
         query = query.filter(TestResult.created_at >= since)
 
-    # Fetch all ranked rows so we can locate the requesting user's rank
-    # regardless of whether they fall inside the display limit.
+    # Only users who have taken at least 1 test, ranked by avg score
     all_results = (
         query.group_by(User.id)
-        .order_by(func.coalesce(func.sum(TestResult.percentage), 0).desc())
+        .having(func.count(TestResult.id) > 0)
+        .order_by(func.avg(TestResult.percentage).desc())
         .all()
     )
 
@@ -53,7 +53,7 @@ async def get_leaderboard(
 
     for i, row in enumerate(all_results):
         full_name = " ".join(filter(None, [row.first_name, row.last_name])) or (f"@{row.username}" if row.username else "Пайдаланушы")
-        score = int(row.total_score)
+        score = round(float(row.avg_score))
         entry = {
             "rank": i + 1,
             "telegram_id": row.telegram_id,
@@ -64,11 +64,16 @@ async def get_leaderboard(
             "photo_url": row.photo_url,
             "tests_taken": row.tests_taken or 0,
             "score": score,
+            "xp": row.score or 0,
         }
         if i < limit:
             leaderboard.append(entry)
         if telegram_id and row.telegram_id == telegram_id:
             my_rank = {"rank": i + 1, "score": score}
+
+    # If requesting user has no tests in this period, find their overall position
+    if telegram_id and not my_rank:
+        my_rank = {"rank": len(all_results) + 1, "score": 0}
 
     return {"leaderboard": leaderboard, "my_rank": my_rank}
 
@@ -79,7 +84,6 @@ async def get_my_rank(telegram_id: int, db: Session = Depends(get_db)):
     if not user:
         return {"rank": None, "score": 0}
     score = user.score or 0
-    # Count users with a strictly higher score to determine rank
     higher_count = db.query(func.count(User.id)).filter(User.score > score).scalar() or 0
     rank = higher_count + 1
     return {"rank": rank, "score": score}

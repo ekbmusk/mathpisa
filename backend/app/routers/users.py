@@ -1,18 +1,259 @@
 import os
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 
 from app.database.database import get_db
+from app.models.admin_test import AdminTestQuestion
+from app.models.chat_history import ChatHistory
+from app.models.problem import Problem
+from app.models.progress import Progress
+from app.models.test_result import TestResult
+from app.models.topic_mastery import TopicMastery
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut, LevelUpdate, NotificationToggle, InactiveUserOut
+from app.services.achievement_service import get_user_achievements
+from app.utils.auth import get_admin_by_telegram_id
 
 router = APIRouter()
 
-VALID_LEVELS = {"easy", "medium", "hard"}
+VALID_LEVELS = {"1", "2", "3", "4", "5", "6"}
+
+TOPIC_LABELS = {
+    "quantity": "Сан және шама",
+    "change_and_relationships": "Өзгерістер мен тәуелділіктер",
+    "space_and_shape": "Кеңістік пен пішін",
+    "uncertainty_and_data": "Анықсыздық пен деректер",
+}
+
+
+# ── Admin endpoints (Telegram ID auth) ──────────────────────────
+
+
+@router.get("/admin/stats")
+async def admin_stats(
+    _admin: int = Depends(get_admin_by_telegram_id),
+    db: Session = Depends(get_db),
+):
+    now = datetime.now(timezone.utc)
+    today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    week_start = today_start - timedelta(days=7)
+
+    total_users = db.query(func.count(User.id)).scalar() or 0
+    total_problems = db.query(func.count(Problem.id)).scalar() or 0
+    total_questions = db.query(func.count(AdminTestQuestion.id)).scalar() or 0
+    total_tests_taken = db.query(func.count(TestResult.id)).scalar() or 0
+    active_today = db.query(func.count(User.id)).filter(User.last_activity >= today_start).scalar() or 0
+    active_week = db.query(func.count(User.id)).filter(User.last_activity >= week_start).scalar() or 0
+
+    # Tests per day (last 7 days)
+    tests_by_day = []
+    for i in range(6, -1, -1):
+        day_start = today_start - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        count = db.query(func.count(TestResult.id)).filter(
+            TestResult.created_at >= day_start, TestResult.created_at < day_end
+        ).scalar() or 0
+        tests_by_day.append({"date": day_start.strftime("%d.%m"), "count": count})
+
+    # Hardest questions (lowest average correct rate)
+    hardest = []
+    questions = db.query(AdminTestQuestion).all()
+    for q in questions:
+        results = db.query(TestResult).all()
+        total, correct = 0, 0
+        for r in results:
+            if not r.answers:
+                continue
+            for ans in r.answers:
+                if ans.get("question_id") == q.id:
+                    total += 1
+                    if ans.get("correct"):
+                        correct += 1
+        if total >= 3:
+            hardest.append({
+                "id": q.id,
+                "question": q.question[:80],
+                "total": total,
+                "correct": correct,
+                "rate": round(correct / total * 100),
+            })
+    hardest.sort(key=lambda x: x["rate"])
+
+    return {
+        "total_users": total_users,
+        "total_problems": total_problems,
+        "total_questions": total_questions,
+        "total_tests_taken": total_tests_taken,
+        "active_today": active_today,
+        "active_week": active_week,
+        "tests_by_day": tests_by_day,
+        "hardest_questions": hardest[:5],
+    }
+
+
+@router.get("/admin/list")
+async def admin_user_list(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    search: str = Query(""),
+    _admin: int = Depends(get_admin_by_telegram_id),
+    db: Session = Depends(get_db),
+):
+    q = db.query(User)
+    if search.strip():
+        term = f"%{search.strip()}%"
+        q = q.filter(
+            (User.first_name.ilike(term))
+            | (User.last_name.ilike(term))
+            | (User.username.ilike(term))
+        )
+    total = q.count()
+    users = q.order_by(User.last_activity.desc()).offset((page - 1) * per_page).limit(per_page).all()
+
+    return {
+        "users": [
+            {
+                "id": u.id,
+                "telegram_id": u.telegram_id,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "username": u.username,
+                "score": u.score or 0,
+                "streak": u.streak or 0,
+                "level": u.level,
+                "last_activity": u.last_activity.isoformat() if u.last_activity else None,
+            }
+            for u in users
+        ],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": max(1, (total + per_page - 1) // per_page),
+    }
+
+
+@router.get("/admin/{user_id}/activity")
+async def admin_user_activity(
+    user_id: int,
+    _admin: int = Depends(get_admin_by_telegram_id),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пайдаланушы табылмады")
+
+    # General
+    topics_started = db.query(func.count(TopicMastery.id)).filter(TopicMastery.user_id == user.id).scalar() or 0
+
+    # Test history
+    test_results = (
+        db.query(TestResult)
+        .filter(TestResult.user_id == user.id)
+        .order_by(TestResult.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    tests = []
+    for tr in test_results:
+        wrong = []
+        if tr.answers:
+            for ans in tr.answers:
+                if not ans.get("correct"):
+                    q = db.query(AdminTestQuestion).filter(AdminTestQuestion.id == ans.get("question_id")).first()
+                    wrong.append(q.question[:80] if q else f"#{ans.get('question_id')}")
+        tests.append({
+            "id": tr.id,
+            "date": tr.created_at.isoformat() if tr.created_at else None,
+            "total": tr.total_questions,
+            "correct": tr.correct_answers,
+            "percentage": round(tr.percentage),
+            "wrong_questions": wrong,
+        })
+
+    # Topic accuracy
+    masteries = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all()
+    topic_accuracy = [
+        {
+            "topic_id": m.topic_id,
+            "topic_name": TOPIC_LABELS.get(m.topic_id, m.topic_id),
+            "total": m.total_attempts,
+            "correct": m.correct_attempts,
+            "accuracy": round(m.current_accuracy),
+            "level": m.estimated_level,
+        }
+        for m in masteries
+    ]
+
+    # Progress
+    progress_records = db.query(Progress).filter(Progress.user_id == user.id).all()
+    progress = [
+        {
+            "topic_id": p.topic_id,
+            "topic_name": TOPIC_LABELS.get(p.topic_id, p.topic_id),
+            "completion": round(p.completion_percent) if p.completion_percent else 0,
+        }
+        for p in progress_records
+    ]
+
+    # AI chat history
+    chats = (
+        db.query(ChatHistory)
+        .filter(ChatHistory.telegram_id == user.telegram_id)
+        .order_by(ChatHistory.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    ai_chat = [
+        {
+            "role": c.role,
+            "content": c.content[:200],
+            "date": c.created_at.isoformat() if c.created_at else None,
+        }
+        for c in reversed(chats)
+    ]
+
+    # Summary
+    best_score = max((t["percentage"] for t in tests), default=0)
+    worst_score = min((t["percentage"] for t in tests), default=0) if tests else 0
+    ai_questions = db.query(func.count(ChatHistory.id)).filter(
+        ChatHistory.telegram_id == user.telegram_id, ChatHistory.role == "user"
+    ).scalar() or 0
+    score_trend = [{"date": t["date"], "pct": t["percentage"]} for t in tests[:10]]
+
+    return {
+        "general": {
+            "id": user.id,
+            "telegram_id": user.telegram_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "level": user.level,
+            "score": user.score or 0,
+            "streak": user.streak or 0,
+            "topics_started": topics_started,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_activity": user.last_activity.isoformat() if user.last_activity else None,
+        },
+        "tests": tests,
+        "topic_accuracy": topic_accuracy,
+        "progress": progress,
+        "ai_chat": ai_chat,
+        "summary": {
+            "best_score": best_score,
+            "worst_score": worst_score,
+            "ai_questions": ai_questions,
+            "total_tests": len(tests),
+            "score_trend": score_trend,
+        },
+    }
+
+
+# ── Regular user endpoints ──────────────────────────────────────
 
 
 async def _resolve_avatar_file_path(telegram_id: int) -> str | None:
@@ -159,3 +400,11 @@ async def get_inactive_users(db: Session = Depends(get_db)):
     db.commit()
 
     return users
+
+
+@router.get("/{telegram_id}/achievements")
+async def get_achievements(telegram_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return []
+    return get_user_achievements(db, user.id)
