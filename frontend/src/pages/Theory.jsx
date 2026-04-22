@@ -6,6 +6,7 @@ import Card from '../components/Card'
 import FormulaRenderer from '../components/FormulaRenderer'
 import QuestionMedia from '../components/QuestionMedia'
 import { SkeletonCard } from '../components/SkeletonLoader'
+import { QoshkarMuyiz, RhombusBand } from '../components/KazakhOrnament'
 import { theoryAPI } from '../api/theory'
 import { useUserStore } from '../store/userStore'
 
@@ -17,10 +18,10 @@ const TOPIC_ICONS = {
 }
 
 const TOPICS = [
-  { id: 'quantity', label: 'Сан және шама', accent: '#6C63FF', lessons: 10, preview: '\\frac{3}{4} + \\frac{1}{2}' },
-  { id: 'change_and_relationships', label: 'Өзгерістер мен тәуелділіктер', accent: '#FF6584', lessons: 10, preview: 'y = 2x + 3' },
-  { id: 'space_and_shape', label: 'Кеңістік пен пішін', accent: '#43E97B', lessons: 8, preview: 'S = \\pi r^2' },
-  { id: 'uncertainty_and_data', label: 'Анықсыздық пен деректер', accent: '#FFD93D', lessons: 8, preview: '\\bar{x} = \\frac{\\sum x_i}{n}' },
+  { id: 'quantity', label: 'Сан және шама', accent: '#2DC6BB', lessons: 10, preview: '\\frac{3}{4} + \\frac{1}{2}' },
+  { id: 'change_and_relationships', label: 'Өзгерістер мен тәуелділіктер', accent: '#E8955A', lessons: 10, preview: 'y = 2x + 3' },
+  { id: 'space_and_shape', label: 'Кеңістік пен пішін', accent: '#3FE0A4', lessons: 8, preview: 'S = \\pi r^2' },
+  { id: 'uncertainty_and_data', label: 'Анықсыздық пен деректер', accent: '#F6C87D', lessons: 8, preview: '\\bar{x} = \\frac{\\sum x_i}{n}' },
 ]
 const TABS = ['Түсіндірме', 'Формулалар', 'Мини-тест']
 
@@ -274,18 +275,32 @@ function TopicDetail({ topic, onBack }) {
   const formulas = content?.subtopics?.flatMap(s => s.formulas || []) || []
 
   return (
-    <div className="min-h-screen-safe bg-bg page-enter">
+    <div className="min-h-screen-safe page-enter">
       <TopBar showBack onBack={onBack} title={topic.label} />
-      <div className="mx-3 mt-1.5 rounded-2xl p-4 mb-3" style={{ background: `linear-gradient(135deg, ${topic.accent}20 0%, #1A1A2E 100%)`, border: `1px solid ${topic.accent}25` }}>
-        {(() => { const Icon = TOPIC_ICONS[topic.id] || BookOpen; return <Icon size={28} strokeWidth={1.5} style={{ color: topic.accent }} className="mb-1.5" /> })()}
-        <h1 className="text-lg font-bold text-text-1">{topic.label}</h1>
-        <p className="text-xs text-text-2 mt-0.5">{topic.lessons} сабақ</p>
+      <div className="relative mx-3 mt-2 rounded-3xl p-5 mb-3 overflow-hidden"
+        style={{
+          background: `radial-gradient(ellipse at top right, ${topic.accent}28 0%, transparent 55%), linear-gradient(150deg, #1A2038 0%, #0F1428 80%)`,
+          border: `1px solid ${topic.accent}28`,
+          boxShadow: '0 18px 36px -20px rgba(0,0,0,0.55)',
+        }}>
+        <div className="absolute -top-4 -right-4 pointer-events-none">
+          <QoshkarMuyiz size={96} color={topic.accent} strokeWidth={1.1} opacity={0.3} />
+        </div>
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.22em]" style={{ color: topic.accent }}>PISA · Тема</span>
+            <span className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${topic.accent}50 0%, transparent 100%)` }} />
+          </div>
+          {(() => { const Icon = TOPIC_ICONS[topic.id] || BookOpen; return <Icon size={30} strokeWidth={1.3} style={{ color: topic.accent }} className="mb-1.5" /> })()}
+          <h1 className="font-display text-[22px] leading-tight font-bold text-text-1 mb-1" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>{topic.label}</h1>
+          <p className="text-[11px] text-text-2 font-medium">{topic.lessons} сабақ</p>
+        </div>
       </div>
 
-      <div className="flex gap-1 px-3 mb-3">
+      <div className="flex gap-1.5 px-3 mb-3">
         {TABS.map((t, i) => (
           <button key={t} onClick={() => { setTab(i); WebApp.HapticFeedback.impactOccurred('light') }}
-            className={`flex-1 py-2 rounded-xl text-[11px] font-semibold transition-all ${i === tab ? 'bg-primary text-white shadow-glow-primary' : 'bg-surface text-text-2 border border-border'}`}>
+            className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold tracking-wide transition-all ${i === tab ? 'bg-primary text-bg-deep shadow-glow-primary' : 'bg-surface text-text-2 border border-border-strong/50'}`}>
             {t}
           </button>
         ))}
@@ -331,33 +346,54 @@ export default function Theory() {
   if (selected) return <TopicDetail topic={selected} onBack={() => setSelected(null)} />
 
   return (
-    <div className="min-h-screen-safe bg-bg page-enter">
+    <div className="min-h-screen-safe page-enter">
       <TopBar />
-      <div className="px-3 pt-1.5 pb-3">
-        <h1 className="text-xl font-extrabold text-text-1 mb-0.5">Теория</h1>
-        <p className="text-xs text-text-2 mb-4">Тақырыпты таңдаңыз</p>
+      <div className="px-3 pt-2 pb-3">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-terracotta font-semibold uppercase tracking-[0.24em]">PISA · Math</span>
+            <span className="h-px flex-1 bg-gradient-to-r from-terracotta/30 to-transparent" />
+          </div>
+          <h1 className="font-display text-[26px] font-bold text-text-1 leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>
+            Теория
+          </h1>
+          <p className="text-xs text-text-2 font-medium mt-0.5">Тақырыпты таңдаңыз</p>
+        </div>
 
         <div className="space-y-2.5">
           {TOPICS.map((topic) => (
             <button key={topic.id} onClick={() => { WebApp.HapticFeedback.impactOccurred('light'); setSelected(topic) }}
-              className="w-full pressable text-left">
-              <div className="rounded-xl p-3.5 border shadow-card" style={{ background: `linear-gradient(135deg, ${topic.accent}12 0%, #1A1A2E 100%)`, borderColor: `${topic.accent}25`, borderLeft: `3px solid ${topic.accent}` }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${topic.accent}18` }}>
-                    {(() => { const Icon = TOPIC_ICONS[topic.id] || BookOpen; return <Icon size={18} strokeWidth={1.5} style={{ color: topic.accent }} /> })()}
+              className="w-full pressable card-lift text-left">
+              <div className="relative rounded-2xl p-4 overflow-hidden"
+                style={{
+                  background: `radial-gradient(ellipse at top right, ${topic.accent}1A 0%, transparent 55%), linear-gradient(180deg, #1A2038 0%, #151B2E 100%)`,
+                  borderTop: `1px solid ${topic.accent}26`,
+                  borderRight: `1px solid ${topic.accent}10`,
+                  borderBottom: `1px solid ${topic.accent}10`,
+                  borderLeft: `3px solid ${topic.accent}`,
+                  boxShadow: '0 14px 28px -18px rgba(0,0,0,0.55)',
+                }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative"
+                    style={{ background: `${topic.accent}15`, border: `1px solid ${topic.accent}28` }}>
+                    {(() => { const Icon = TOPIC_ICONS[topic.id] || BookOpen; return <Icon size={20} strokeWidth={1.5} style={{ color: topic.accent }} /> })()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-text-1 text-xs mb-0.5 truncate">{topic.label}</div>
-                    <div className="text-[10px] text-text-3 mb-1.5">{topic.lessons} сабақ</div>
-                    <div className="text-xs">
+                    <div className="font-display font-bold text-text-1 text-[14px] mb-0.5 truncate leading-tight" style={{ fontVariationSettings: "'opsz' 100, 'SOFT' 40" }}>{topic.label}</div>
+                    <div className="text-[10px] text-text-3 mb-1.5 font-medium uppercase tracking-wide">{topic.lessons} сабақ</div>
+                    <div className="text-[11px] font-mono opacity-80">
                       <FormulaRenderer formula={`$${topic.preview}$`} inline />
                     </div>
                   </div>
-                  <ChevronRight size={16} strokeWidth={1.5} style={{ color: topic.accent }} className="flex-shrink-0" />
+                  <ChevronRight size={17} strokeWidth={1.6} style={{ color: topic.accent }} className="flex-shrink-0" />
                 </div>
               </div>
             </button>
           ))}
+        </div>
+
+        <div className="flex justify-center pt-4 opacity-60">
+          <RhombusBand width={160} height={10} color="#E8955A" opacity={0.45} />
         </div>
       </div>
     </div>

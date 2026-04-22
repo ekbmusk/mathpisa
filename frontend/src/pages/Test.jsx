@@ -31,16 +31,16 @@ const TOPIC_LUCIDE_ICONS = {
 
 function TimerCircle({ seconds }) {
   const r = 20, c = 2 * Math.PI * r
-  const color = seconds <= 5 ? '#FF6B6B' : seconds <= 10 ? '#FFD93D' : '#43E97B'
+  const color = seconds <= 5 ? '#FF6B6B' : seconds <= 10 ? '#F6C87D' : '#2DC6BB'
   return (
     <div className="relative w-12 h-12 flex-shrink-0">
       <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
-        <circle cx="24" cy="24" r={r} fill="none" stroke="#1A1A2E" strokeWidth="3.5" />
+        <circle cx="24" cy="24" r={r} fill="none" stroke="#1E2440" strokeWidth="3.5" />
         <circle cx="24" cy="24" r={r} fill="none" stroke={color} strokeWidth="3.5"
           strokeDasharray={`${c * (seconds / TIMER)} ${c}`} strokeLinecap="round"
           style={{ transition: 'stroke-dasharray 1s linear, stroke 0.3s' }} />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color }}>{seconds}</span>
+      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold font-mono" style={{ color }}>{seconds}</span>
     </div>
   )
 }
@@ -111,40 +111,45 @@ function ResultScreen({ score, total, pct, xpEarned, bonusXp, isDaily, onRetry, 
   const [showXP, setShowXP] = useState(xpEarned > 0)
 
   useEffect(() => {
-    if (passed) confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ['#6C63FF', '#43E97B', '#FF6584', '#FFD93D'] })
+    if (passed) confetti({ particleCount: 140, spread: 85, origin: { y: 0.5 }, colors: ['#2DC6BB', '#3FE0A4', '#E8955A', '#F6C87D', '#F5EEDF'] })
   }, [passed])
 
   const r = 50, circ = 2 * Math.PI * r
+  const mainColor = passed ? '#3FE0A4' : '#E8955A'
   return (
-    <div className="h-screen-safe bg-bg flex flex-col items-center justify-center px-5 page-enter">
+    <div className="h-screen-safe flex flex-col items-center justify-center px-5 page-enter relative overflow-hidden">
       {showXP && (
         <XPAnimation xp={xpEarned} bonusXp={bonusXp} onDone={() => setShowXP(false)} />
       )}
-      <Trophy size={52} strokeWidth={1} className={`mb-3 ${passed ? 'text-warning' : 'text-text-3'}`} />
-      <h2 className="text-2xl font-extrabold text-text-1 mb-0.5">{passed ? 'Керемет!' : 'Тырысыңыз!'}</h2>
-      <p className="text-sm text-text-2 mb-2">{score} / {total} дұрыс жауап</p>
+      <Trophy size={54} strokeWidth={1} className="mb-3" style={{ color: passed ? '#F6C87D' : '#5A6078' }} />
+      <h2 className="font-display text-[30px] font-bold text-text-1 mb-0.5 leading-none" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>
+        {passed ? 'Керемет!' : 'Тырысыңыз!'}
+      </h2>
+      <p className="text-sm text-text-2 font-medium mb-2">{score} / {total} дұрыс жауап</p>
       {xpEarned > 0 && (
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex items-center gap-1 bg-primary/10 border border-primary/20 rounded-full px-2.5 py-0.5">
+          <div className="flex items-center gap-1 rounded-full px-2.5 py-1 font-mono border"
+            style={{ background: 'rgba(45,198,187,0.10)', borderColor: 'rgba(45,198,187,0.30)' }}>
             <Zap size={11} strokeWidth={2} className="text-primary" />
             <span className="text-[11px] font-bold text-primary">+{xpEarned} XP</span>
           </div>
           {bonusXp > 0 && (
-            <div className="flex items-center gap-1 bg-warning/10 border border-warning/20 rounded-full px-2.5 py-0.5">
-              <span className="text-[11px] font-bold text-warning">+{bonusXp} бонус</span>
+            <div className="flex items-center gap-1 rounded-full px-2.5 py-1 font-mono border"
+              style={{ background: 'rgba(246,200,125,0.10)', borderColor: 'rgba(246,200,125,0.30)' }}>
+              <span className="text-[11px] font-bold text-saffron">+{bonusXp} бонус</span>
             </div>
           )}
         </div>
       )}
-      <div className="relative w-28 h-28 mx-auto mb-6">
-        <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r={r} fill="none" stroke="#1A1A2E" strokeWidth="7" />
-          <circle cx="60" cy="60" r={r} fill="none" stroke={passed ? '#43E97B' : '#FF6584'} strokeWidth="7"
+      <div className="relative w-32 h-32 mx-auto mb-6">
+        <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r={r} fill="none" stroke="#1E2440" strokeWidth="7" />
+          <circle cx="60" cy="60" r={r} fill="none" stroke={mainColor} strokeWidth="7"
             strokeDasharray={`${circ * (pct / 100)} ${circ}`} strokeLinecap="round"
-            style={{ transition: 'stroke-dasharray 1.5s cubic-bezier(0.34,1.56,0.64,1)' }} />
+            style={{ transition: 'stroke-dasharray 1.5s cubic-bezier(0.34,1.56,0.64,1)', filter: `drop-shadow(0 0 8px ${mainColor}60)` }} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-3xl font-extrabold ${passed ? 'text-success' : 'text-secondary'}`}>{pct}%</span>
+          <span className="font-display text-[32px] font-bold leading-none" style={{ color: mainColor, fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>{pct}%</span>
         </div>
       </div>
       {newAchievements.length > 0 && (
@@ -184,43 +189,69 @@ function TopicSelect({ topics, loading, onSelect }) {
   )
 
   return (
-    <div className="min-h-screen-safe bg-bg page-enter">
+    <div className="min-h-screen-safe page-enter">
       <TopBar />
-      <div className="px-3 pt-3 pb-4">
-        <h2 className="text-base font-bold text-text-1 mb-0.5">Тест тақырыбын таңда</h2>
-        <p className="text-xs text-text-3 mb-3">PISA математика домендері</p>
+      <div className="px-3 pt-2 pb-4">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-terracotta font-semibold uppercase tracking-[0.24em]">Тест</span>
+            <span className="h-px flex-1 bg-gradient-to-r from-terracotta/30 to-transparent" />
+          </div>
+          <h1 className="font-display text-[26px] font-bold text-text-1 leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>
+            Тақырыпты таңда
+          </h1>
+          <p className="text-xs text-text-2 font-medium mt-0.5">PISA математика домендері</p>
+        </div>
 
         <button
           onClick={() => onSelect(null)}
-          className="w-full flex items-center gap-3 bg-gradient-primary rounded-xl px-3.5 py-3 mb-3 pressable shadow-glow-primary"
+          className="relative w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 mb-3 pressable card-lift overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #2DC6BB 0%, #1FA898 60%, #2DC6BB 100%)',
+            boxShadow: '0 16px 32px -16px rgba(45,198,187,0.55), inset 0 1px 0 rgba(255,255,255,0.2)',
+          }}
         >
-          <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-            <Shuffle size={18} className="text-white" />
+          <span className="absolute inset-0 opacity-30 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at top right, rgba(246,200,125,0.35) 0%, transparent 60%)' }} />
+          <div className="relative w-10 h-10 rounded-xl bg-bg-deep/30 flex items-center justify-center flex-shrink-0 border border-white/20">
+            <Shuffle size={19} strokeWidth={2} className="text-bg-deep" />
           </div>
-          <div className="text-left min-w-0">
-            <p className="text-xs font-bold text-white">Аралас тест</p>
-            <p className="text-[10px] text-white/70">Барлық тақырыптардан</p>
+          <div className="relative text-left min-w-0">
+            <p className="text-[9px] font-bold text-bg-deep/70 uppercase tracking-[0.2em]">Mix</p>
+            <p className="font-display text-[15px] font-bold text-bg-deep leading-tight" style={{ fontVariationSettings: "'opsz' 100, 'SOFT' 50" }}>Аралас тест</p>
+            <p className="text-[10px] text-bg-deep/70 font-medium">Барлық тақырыптардан</p>
           </div>
-          <ChevronRight size={16} className="text-white/70 ml-auto flex-shrink-0" />
+          <ChevronRight size={17} strokeWidth={2.2} className="text-bg-deep/80 ml-auto flex-shrink-0" />
         </button>
 
         <div className="space-y-2">
-          {topics.map(topic => (
-            <button
-              key={topic.id}
-              onClick={() => onSelect(topic.id)}
-              className="w-full flex items-center gap-3 bg-surface border border-border rounded-xl px-3.5 py-3 pressable"
-            >
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-lg flex-shrink-0">
-                {TOPIC_ICONS[topic.id] || (() => { const Icon = TOPIC_LUCIDE_ICONS[topic.id] || BookOpen; return <Icon size={18} className="text-primary" /> })()}
-              </div>
-              <div className="text-left flex-1 min-w-0">
-                <p className="text-xs font-semibold text-text-1 truncate">{topic.name}</p>
-                <p className="text-[10px] text-text-3">{topic.count} сұрақ</p>
-              </div>
-              <ChevronRight size={16} className="text-text-3 flex-shrink-0" />
-            </button>
-          ))}
+          {topics.map((topic, idx) => {
+            const accents = ['#2DC6BB', '#E8955A', '#3FE0A4', '#F6C87D']
+            const accent = accents[idx % accents.length]
+            return (
+              <button
+                key={topic.id}
+                onClick={() => onSelect(topic.id)}
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 pressable card-lift"
+                style={{
+                  background: 'linear-gradient(180deg, #1A2038 0%, #151B2E 100%)',
+                  border: '1px solid rgba(232,149,90,0.10)',
+                  borderLeft: `3px solid ${accent}`,
+                  boxShadow: '0 10px 22px -14px rgba(0,0,0,0.5)',
+                }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                  style={{ background: `${accent}15`, border: `1px solid ${accent}28` }}>
+                  {TOPIC_ICONS[topic.id] || (() => { const Icon = TOPIC_LUCIDE_ICONS[topic.id] || BookOpen; return <Icon size={19} strokeWidth={1.6} style={{ color: accent }} /> })()}
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <p className="font-display text-[14px] font-bold text-text-1 truncate leading-tight" style={{ fontVariationSettings: "'opsz' 100, 'SOFT' 40" }}>{topic.name}</p>
+                  <p className="text-[10px] text-text-3 font-mono mt-0.5">{topic.count} сұрақ</p>
+                </div>
+                <ChevronRight size={17} strokeWidth={1.6} className="text-text-3 flex-shrink-0" />
+              </button>
+            )
+          })}
         </div>
 
         {topics.length === 0 && (

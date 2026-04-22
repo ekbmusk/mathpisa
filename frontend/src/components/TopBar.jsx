@@ -6,6 +6,7 @@ import { progressAPI } from '../api/progress'
 import { ratingAPI } from '../api/rating'
 import ProgressBar from './ProgressBar'
 import Avatar from './Avatar'
+import { QoshkarMuyiz, RhombusBand } from './KazakhOrnament'
 import client from '../api/client'
 
 const LEVEL_INFO = {
@@ -97,17 +98,27 @@ function ProfileSheet({ onClose, user }) {
 
         <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8">
           {/* Profile header */}
-          <div className="flex flex-col items-center py-3">
-            <Avatar user={user} size="xl" className="mb-2 shadow-glow-primary" priority />
-            <h2 className="text-base font-bold text-text-1">{fullName}</h2>
-            {user?.username && <p className="text-xs text-text-2 mt-0.5">@{user.username}</p>}
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full" style={{ background: `${lvl.color}18`, color: lvl.color }}>
-                {lvl.label} · {level}-деңгей
+          <div className="relative flex flex-col items-center py-4 overflow-hidden">
+            <div className="absolute -top-6 -left-8 pointer-events-none opacity-50">
+              <QoshkarMuyiz size={80} color="#E8955A" strokeWidth={1} opacity={0.3} />
+            </div>
+            <div className="absolute -top-6 -right-8 pointer-events-none opacity-50">
+              <QoshkarMuyiz size={80} color="#2DC6BB" strokeWidth={1} opacity={0.3} className="scale-x-[-1]" />
+            </div>
+            <Avatar user={user} size="xl" className="mb-2 shadow-glow-primary relative z-10" priority />
+            <h2 className="font-display text-[20px] font-bold text-text-1 text-center leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>{fullName}</h2>
+            {user?.username && <p className="text-[11px] text-text-2 mt-0.5 font-mono">@{user.username}</p>}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full font-mono" style={{ background: `${lvl.color}18`, color: lvl.color, border: `1px solid ${lvl.color}30` }}>
+                L{level} · {lvl.label}
               </span>
-              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-saffron px-2.5 py-0.5 rounded-full font-mono"
+                style={{ background: 'rgba(246,200,125,0.10)', border: '1px solid rgba(246,200,125,0.30)' }}>
                 {getRankLabel(rank?.rank)} Рейтинг
               </span>
+            </div>
+            <div className="mt-3 opacity-60">
+              <RhombusBand width={140} height={8} color="#E8955A" opacity={0.45} />
             </div>
           </div>
 

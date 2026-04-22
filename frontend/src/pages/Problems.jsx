@@ -10,20 +10,20 @@ import { SkeletonCard } from '../components/SkeletonLoader'
 import { problemsAPI } from '../api/problems'
 
 const LEVELS = [
-  { id: '1', label: '1', color: '#43E97B' },
-  { id: '2', label: '2', color: '#7BE97B' },
-  { id: '3', label: '3', color: '#FFD93D' },
-  { id: '4', label: '4', color: '#FFA63D' },
+  { id: '1', label: '1', color: '#3FE0A4' },
+  { id: '2', label: '2', color: '#6FE3D9' },
+  { id: '3', label: '3', color: '#F6C87D' },
+  { id: '4', label: '4', color: '#E8955A' },
   { id: '5', label: '5', color: '#FF6B6B' },
-  { id: '6', label: '6', color: '#D93DFF' },
-  { id: null, label: 'Кездейсоқ', color: '#6C63FF', Icon: Target },
+  { id: '6', label: '6', color: '#C97AE8' },
+  { id: null, label: 'Кездейсоқ', color: '#2DC6BB', Icon: Target },
 ]
 const TOPICS = [
   { id: null, label: 'Барлығы', Icon: null },
-  { id: 'quantity', label: 'Сан', Icon: Sigma, color: '#6C63FF' },
-  { id: 'change_and_relationships', label: 'Өзгеріс', Icon: TrendingUp, color: '#FF6584' },
-  { id: 'space_and_shape', label: 'Кеңістік', Icon: Shapes, color: '#43E97B' },
-  { id: 'uncertainty_and_data', label: 'Деректер', Icon: PieChart, color: '#FFD93D' },
+  { id: 'quantity', label: 'Сан', Icon: Sigma, color: '#2DC6BB' },
+  { id: 'change_and_relationships', label: 'Өзгеріс', Icon: TrendingUp, color: '#E8955A' },
+  { id: 'space_and_shape', label: 'Кеңістік', Icon: Shapes, color: '#3FE0A4' },
+  { id: 'uncertainty_and_data', label: 'Деректер', Icon: PieChart, color: '#F6C87D' },
 ]
 const TOPIC_LABELS = {
   quantity: 'Сан және шама',
@@ -121,13 +121,19 @@ export default function Problems() {
     const lvl = LEVELS.find(l => l.id === selected.difficulty)
     const hasNext = problemIndex + 1 < problems.length
     return (
-      <div className="h-screen-safe bg-bg page-enter flex flex-col">
+      <div className="h-screen-safe page-enter flex flex-col">
         <TopBar showBack onBack={() => { setSelected(null); setResult(null); setAnswer('') }} title={`Есеп ${problemIndex + 1}/${problems.length}`} />
-        <div className="flex-1 px-3 pt-1.5 pb-4 flex flex-col gap-3 overflow-y-auto no-scrollbar">
-          <Card className="p-3.5">
+        <div className="flex-1 px-3 pt-2 pb-4 flex flex-col gap-3 overflow-y-auto no-scrollbar">
+          <Card className="p-4 relative overflow-hidden">
             {lvl && (
-              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mb-2" style={{ background: `${lvl.color}18`, color: lvl.color }}>
-                {lvl.label}-деңгей
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold font-mono px-2 py-0.5 rounded-full mb-2.5"
+                style={{
+                  background: `${lvl.color}15`,
+                  color: lvl.color,
+                  border: `1px solid ${lvl.color}30`,
+                }}>
+                <span className="w-1 h-1 rounded-full" style={{ background: lvl.color }} />
+                L{lvl.label} · ДЕҢГЕЙ
               </span>
             )}
             <FormulaRenderer text={selected.question} />
@@ -143,14 +149,25 @@ export default function Problems() {
             <ResultCard result={result} onNext={handleNext} hasNext={hasNext} />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="bg-surface border-2 border-primary/30 rounded-xl px-3 py-3 text-center mb-2 flex items-center justify-center">
-                <span className={`text-2xl font-bold tracking-widest ${answer ? 'text-text-1' : 'text-text-3'}`}>{answer || '—'}</span>
+              <div className="relative rounded-2xl px-3 py-4 text-center mb-2.5 flex items-center justify-center overflow-hidden"
+                style={{
+                  background: 'linear-gradient(180deg, #1C2340 0%, #151B2E 100%)',
+                  border: '1px solid rgba(246,200,125,0.22)',
+                  boxShadow: 'inset 0 1px 0 rgba(246,200,125,0.08), 0 12px 28px -18px rgba(0,0,0,0.55)',
+                }}>
+                <span className="absolute top-2 left-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-terracotta/70">Жауап</span>
+                <span className={`font-mono text-[26px] font-bold tracking-widest leading-none ${answer ? 'text-text-1' : 'text-text-3'}`}>{answer || '—'}</span>
               </div>
               <div className="grid grid-cols-3 gap-1.5">
                 {NUMPAD.map(k => (
                   <button key={k} onClick={() => handleKey(k)}
-                    className="bg-surface-2 border border-border rounded-lg py-2.5 flex items-center justify-center text-base font-semibold text-text-1 active:bg-primary/20 active:scale-95 transition-all">
-                    {k === '⌫' ? <Delete size={18} strokeWidth={1.5} className="text-text-2" /> : k}
+                    className="relative rounded-xl py-3 flex items-center justify-center font-mono text-[17px] font-semibold text-text-1 transition-all active:scale-95"
+                    style={{
+                      background: 'linear-gradient(180deg, #1E2440 0%, #1A2038 100%)',
+                      border: '1px solid rgba(232,149,90,0.12)',
+                      boxShadow: 'inset 0 1px 0 rgba(246,200,125,0.05)',
+                    }}>
+                    {k === '⌫' ? <Delete size={18} strokeWidth={1.5} className="text-terracotta" /> : k}
                   </button>
                 ))}
               </div>
@@ -165,18 +182,26 @@ export default function Problems() {
   }
 
   return (
-    <div className="min-h-screen-safe bg-bg page-enter">
+    <div className="min-h-screen-safe page-enter">
       <TopBar />
-      <div className="px-3 pt-1.5 pb-3">
-        <h1 className="text-xl font-extrabold text-text-1 mb-0.5">Есептер</h1>
-        <p className="text-xs text-text-2 mb-3">Тақырып пен деңгейді таңдаңыз</p>
+      <div className="px-3 pt-2 pb-3">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-terracotta font-semibold uppercase tracking-[0.24em]">Практика</span>
+            <span className="h-px flex-1 bg-gradient-to-r from-terracotta/30 to-transparent" />
+          </div>
+          <h1 className="font-display text-[26px] font-bold text-text-1 leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>
+            Есептер
+          </h1>
+          <p className="text-xs text-text-2 font-medium mt-0.5">Тақырып пен деңгейді таңдаңыз</p>
+        </div>
 
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 mb-2">
           {TOPICS.map(t => (
             <button key={String(t.id)} onClick={() => { setTopic(t.id); WebApp.HapticFeedback.impactOccurred('light') }}
-              className={`chip flex-shrink-0 border flex items-center gap-1 ${topic === t.id ? 'text-white border-transparent bg-primary' : 'bg-surface text-text-2 border-border'}`}
-              style={topic === t.id && t.color ? { background: t.color } : {}}>
-              {t.Icon && <t.Icon size={12} strokeWidth={1.5} />}
+              className={`chip flex-shrink-0 border flex items-center gap-1 font-semibold ${topic === t.id ? 'text-bg-deep border-transparent' : 'bg-surface text-text-2 border-border-strong/40'}`}
+              style={topic === t.id ? { background: t.color || '#2DC6BB' } : {}}>
+              {t.Icon && <t.Icon size={12} strokeWidth={1.8} />}
               {t.label}
             </button>
           ))}
@@ -185,9 +210,9 @@ export default function Problems() {
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 mb-4">
           {LEVELS.map(l => (
             <button key={String(l.id)} onClick={() => { setLevel(l.id); WebApp.HapticFeedback.impactOccurred('light') }}
-              className={`chip flex-shrink-0 border flex items-center gap-1 ${level === l.id ? 'text-white border-transparent' : 'bg-surface text-text-2 border-border'}`}
+              className={`chip flex-shrink-0 border flex items-center gap-1 font-mono font-bold ${level === l.id ? 'text-bg-deep border-transparent' : 'bg-surface text-text-2 border-border-strong/40'}`}
               style={level === l.id ? { background: l.color } : {}}>
-              {l.Icon && <l.Icon size={12} strokeWidth={1.5} />}
+              {l.Icon && <l.Icon size={12} strokeWidth={1.8} />}
               {l.label}
             </button>
           ))}
