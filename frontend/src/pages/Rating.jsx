@@ -106,6 +106,7 @@ export default function Rating() {
                   <Avatar
                     size="sm"
                     user={{
+                      telegram_id: leader?.telegram_id,
                       first_name: leader?.first_name || displayName,
                       username: leader?.username,
                       full_name: displayName,

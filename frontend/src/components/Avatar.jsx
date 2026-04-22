@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
 export default function Avatar({ user, size = 'md', className = '', priority = false }) {
-    const [broken, setBroken] = useState(false)
+    const [stage, setStage] = useState(0)
 
     const sizes = {
         sm: 'w-8 h-8 text-xs',
@@ -10,7 +12,13 @@ export default function Avatar({ user, size = 'md', className = '', priority = f
         xl: 'w-20 h-20 text-3xl',
     }
 
-    const photo = user?.photo_url || user?.photo || null
+    const telegramId = user?.id || user?.telegram_id
+    const directPhoto = user?.photo_url || user?.photo || null
+    const proxyPhoto = telegramId ? `${API_BASE}/users/${telegramId}/avatar` : null
+
+    const sources = [directPhoto, proxyPhoto].filter(Boolean)
+    const currentSrc = sources[stage] || null
+
     const fallbackLetter = useMemo(() => {
         const source = user?.first_name || user?.username || user?.full_name || ''
         return source?.[0]?.toUpperCase() || '?'
@@ -18,16 +26,16 @@ export default function Avatar({ user, size = 'md', className = '', priority = f
 
     const sizeClass = sizes[size] || sizes.md
 
-    if (photo && !broken) {
+    if (currentSrc) {
         return (
             <img
-                src={photo}
+                key={currentSrc}
+                src={currentSrc}
                 alt={user?.first_name || 'Profile'}
                 loading={priority ? 'eager' : 'lazy'}
                 decoding="async"
                 referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
-                onError={() => setBroken(true)}
+                onError={() => setStage((s) => s + 1)}
                 className={`${sizeClass} rounded-full object-cover border border-border-strong ${className}`}
             />
         )
