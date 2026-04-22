@@ -246,27 +246,28 @@ export default function TopBar({ title, showBack, onBack }) {
 
   return (
     <>
-      <div className="flex items-center justify-between px-3 py-2 sticky top-0 z-40"
-        style={{ background: 'rgba(15,15,26,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="flex items-center justify-between px-3 py-2.5 sticky top-0 z-40"
+        style={{ background: 'rgba(11,15,31,0.82)', backdropFilter: 'blur(22px) saturate(180%)', WebkitBackdropFilter: 'blur(22px) saturate(180%)', borderBottom: '1px solid rgba(232,149,90,0.08)' }}>
         {showBack ? (
           <button onClick={onBack} className="flex items-center gap-1.5 pressable min-w-0">
             <ArrowLeft size={18} strokeWidth={1.5} className="text-text-2 flex-shrink-0" />
             {title && <span className="text-sm font-semibold text-text-1 truncate">{title}</span>}
           </button>
         ) : (
-          <button onClick={() => setShowProfile(true)} className="flex items-center gap-2 pressable min-w-0">
+          <button onClick={() => setShowProfile(true)} className="flex items-center gap-2.5 pressable min-w-0">
             <Avatar user={user} size="sm" className="shadow-glow-primary flex-shrink-0" priority />
-            <div className="text-left min-w-0">
-              <div className="text-[9px] text-text-2 leading-none">Математика PISA</div>
-              <div className="text-xs font-semibold text-text-1 leading-tight mt-0.5 truncate">{user?.first_name || 'Сәлем!'}</div>
+            <div className="text-left min-w-0 leading-tight">
+              <div className="text-[9px] text-terracotta/80 uppercase tracking-[0.18em] font-semibold leading-none">PISA math</div>
+              <div className="font-display-tight text-[15px] font-bold text-text-1 mt-0.5 truncate">{user?.first_name || 'Сәлем!'}</div>
             </div>
           </button>
         )}
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <div className="flex items-center gap-1 bg-surface-2 rounded-full px-2 py-1 border border-border">
-            <Trophy size={12} strokeWidth={1.5} className="text-warning" />
-            <span className="text-[11px] font-bold text-primary">{rank?.rank ? `#${rank.rank}` : '#—'}</span>
+          <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+            style={{ background: 'linear-gradient(135deg, rgba(45,198,187,0.10) 0%, rgba(232,149,90,0.10) 100%)', borderColor: 'rgba(246,200,125,0.24)' }}>
+            <Trophy size={11} strokeWidth={2} className="text-saffron" />
+            <span className="text-[11px] font-bold font-mono text-text-1">{rank?.rank ? `#${rank.rank}` : '#—'}</span>
           </div>
         </div>
       </div>

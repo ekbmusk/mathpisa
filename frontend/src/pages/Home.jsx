@@ -4,18 +4,19 @@ import WebApp from '@twa-dev/sdk'
 import { BookOpen, Calculator, Brain, Trophy, BarChart2, HelpCircle, Flame, CheckCircle2, ChevronRight, Zap, Sigma, TrendingUp, Shapes, PieChart, AlertTriangle, Lightbulb, Award } from 'lucide-react'
 import TopBar from '../components/TopBar'
 import ProgressBar from '../components/ProgressBar'
+import { QoshkarMuyiz, RhombusBand } from '../components/KazakhOrnament'
 import { progressAPI } from '../api/progress'
 import { testsAPI } from '../api/tests'
 import { useUserStore } from '../store/userStore'
 
 const MENU = [
-  { Icon: BookOpen, title: 'Теория', subtitle: 'PISA математика тақырыптары', path: '/theory', accent: '#6C63FF' },
-  { Icon: Calculator, title: 'Есептер', subtitle: 'PISA деңгейлері бойынша', path: '/problems', accent: '#FF6584' },
-  { Icon: Brain, title: 'Тест', subtitle: '10 сұрақпен тексер', path: '/test', accent: '#43E97B' },
-  { Icon: Award, title: 'Жетістіктер', subtitle: 'Медальдар мен бейджіктер', path: '/achievements', accent: '#FFD93D' },
-  { Icon: Trophy, title: 'Рейтинг', subtitle: 'Үздік оқушылар', path: '/rating', accent: '#FF6584' },
-  { Icon: BarChart2, title: 'Прогресс', subtitle: 'Үлгерім бақылау', path: '/progress', accent: '#38BDF8' },
-  { Icon: HelpCircle, title: 'Көмек', subtitle: 'Нұсқаулық', path: '/help', accent: '#8B8FA8' },
+  { Icon: BookOpen, title: 'Теория', subtitle: 'PISA математика тақырыптары', path: '/theory', accent: '#2DC6BB' },
+  { Icon: Calculator, title: 'Есептер', subtitle: 'PISA деңгейлері бойынша', path: '/problems', accent: '#E8955A' },
+  { Icon: Brain, title: 'Тест', subtitle: '10 сұрақпен тексер', path: '/test', accent: '#3FE0A4' },
+  { Icon: Award, title: 'Жетістіктер', subtitle: 'Медальдар мен бейджіктер', path: '/achievements', accent: '#F6C87D' },
+  { Icon: Trophy, title: 'Рейтинг', subtitle: 'Үздік оқушылар', path: '/rating', accent: '#E8955A' },
+  { Icon: BarChart2, title: 'Прогресс', subtitle: 'Үлгерім бақылау', path: '/progress', accent: '#7AA7FF' },
+  { Icon: HelpCircle, title: 'Көмек', subtitle: 'Нұсқаулық', path: '/help', accent: '#9BA4B8' },
 ]
 
 const MOTIVATIONS = [
@@ -47,54 +48,94 @@ export default function Home() {
   const lastTopic = stats?.topics?.find(t => t.percent > 0 && t.percent < 100)
 
   return (
-    <div className="min-h-screen-safe bg-bg page-enter">
+    <div className="min-h-screen-safe page-enter">
       <TopBar />
-      <div className="px-3 space-y-3 pt-1.5 pb-3">
+      <div className="px-3 space-y-3 pt-2 pb-3">
 
-        {/* Hero */}
-        <div className="relative rounded-2xl overflow-hidden border border-primary/20 p-4 shadow-glow-primary/10 card-lift"
-          style={{ background: 'linear-gradient(135deg, rgba(108,99,255,0.15) 0%, #1A1A2E 60%, #0F0F1A 100%)' }}>
-          <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-primary/20 blur-2xl effect-glow-pulse" />
-          <div className="absolute -bottom-10 -left-8 w-20 h-20 rounded-full bg-secondary/20 blur-2xl effect-drift" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-            <span className="particle particle-1 absolute top-2 right-6 text-primary/25 text-lg font-mono">∑</span>
-            <span className="particle particle-2 absolute top-8 right-14 text-secondary/20 text-xs font-mono">π</span>
-            <span className="particle particle-3 absolute bottom-4 right-4 text-primary/20 text-xl font-mono">∞</span>
+        {/* Hero — night steppe with warm ornaments */}
+        <div className="relative rounded-[26px] overflow-hidden border border-terracotta/15 px-5 py-5 card-lift"
+          style={{
+            background: 'radial-gradient(ellipse at top right, rgba(232,149,90,0.22) 0%, transparent 55%), radial-gradient(ellipse at bottom left, rgba(45,198,187,0.18) 0%, transparent 55%), linear-gradient(150deg, #1A1E3A 0%, #0F1428 60%, #0B0F1F 100%)',
+            boxShadow: '0 20px 40px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(246,200,125,0.08)',
+          }}>
+          {/* slow-spinning ornament behind the content */}
+          <div className="absolute -top-6 -right-6 pointer-events-none">
+            <div className="animate-ornament-spin opacity-60">
+              <QoshkarMuyiz size={140} color="#E8955A" strokeWidth={1.2} opacity={0.35} />
+            </div>
           </div>
+          <div className="absolute -bottom-10 -left-10 pointer-events-none">
+            <QoshkarMuyiz size={110} color="#2DC6BB" strokeWidth={1.1} opacity={0.22} className="rotate-180" />
+          </div>
+
+          {/* soft glow orbs */}
+          <div className="absolute top-4 right-10 w-20 h-20 rounded-full bg-primary/15 blur-2xl effect-glow-pulse pointer-events-none" />
+          <div className="absolute -bottom-6 left-8 w-24 h-24 rounded-full bg-terracotta/12 blur-3xl effect-drift pointer-events-none" />
+
+          {/* tiny math glyphs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+            <span className="particle particle-1 absolute top-3 right-20 text-primary/35 text-base font-mono">∑</span>
+            <span className="particle particle-2 absolute top-10 right-8 text-saffron/30 text-[11px] font-mono">π</span>
+            <span className="particle particle-3 absolute bottom-5 right-14 text-terracotta/30 text-lg font-mono">∞</span>
+          </div>
+
           <div className="relative z-10">
-            <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-0.5">Математика PISA</p>
-            <h1 className="text-xl font-extrabold text-text-1 mb-0.5">
-              Сәлем, {user?.first_name || 'Оқушы'}!
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[9px] text-saffron/80 font-semibold uppercase tracking-[0.24em]">PISA · Math</span>
+              <span className="h-px flex-1 bg-gradient-to-r from-saffron/30 to-transparent" />
+            </div>
+            <h1 className="font-display text-[28px] leading-[1.05] font-bold text-text-1 mb-1.5" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>
+              Сәлем,<br />
+              <span className="text-saffron italic" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 100" }}>{user?.first_name || 'Оқушы'}</span>
             </h1>
-            <p className="text-xs text-text-2 mb-2">{motivation}</p>
-            {(stats?.streak || 0) > 0 && (
-              <div className="inline-flex items-center gap-1 bg-warning/10 border border-warning/25 rounded-full px-2.5 py-0.5">
-                <Flame size={12} strokeWidth={2} className="text-warning" />
-                <span className="text-warning text-[11px] font-semibold">{stats.streak} күн қатар</span>
-              </div>
-            )}
+            <p className="text-[13px] text-text-2 mb-2.5 font-medium leading-snug max-w-[85%]">{motivation}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {(stats?.streak || 0) > 0 && (
+                <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                  style={{ background: 'rgba(246,200,125,0.10)', borderColor: 'rgba(246,200,125,0.28)' }}>
+                  <Flame size={12} strokeWidth={2.2} className="text-saffron" />
+                  <span className="text-saffron text-[11px] font-bold font-mono">{stats.streak}</span>
+                  <span className="text-saffron/70 text-[10px]">күн қатар</span>
+                </div>
+              )}
+              <RhombusBand width={72} height={8} color="#E8955A" opacity={0.5} />
+            </div>
           </div>
         </div>
 
         {/* Quick stats */}
         {loading ? (
-          <div className="grid grid-cols-3 gap-2">
-            {[0, 1, 2].map(i => <div key={i} className="skeleton h-16 rounded-xl" />)}
+          <div className="grid grid-cols-4 gap-2">
+            {[0, 1, 2, 3].map(i => <div key={i} className="skeleton h-20 rounded-2xl" />)}
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-2">
             {[
-              { Icon: Zap, label: 'XP', value: stats?.total_score || 0, color: 'text-primary' },
-              { Icon: Flame, label: 'Жолақ', value: stats?.streak || 0, color: 'text-warning' },
-              { Icon: CheckCircle2, label: 'Есеп', value: stats?.problems_solved || 0, color: 'text-success' },
-              { Icon: Brain, label: 'Тест', value: stats?.tests_taken || 0, color: 'text-info' },
-            ].map((s, i) => (
-              <div key={i} className="bg-surface border border-border rounded-xl p-2.5 text-center shadow-card">
-                <s.Icon size={18} strokeWidth={1.5} className={`mx-auto mb-1 ${s.color}`} />
-                <div className="text-base font-bold text-text-1">{s.value}</div>
-                <div className="text-[10px] text-text-2">{s.label}</div>
-              </div>
-            ))}
+              { Icon: Zap, label: 'XP', value: stats?.total_score || 0, tint: 'primary' },
+              { Icon: Flame, label: 'Жолақ', value: stats?.streak || 0, tint: 'saffron' },
+              { Icon: CheckCircle2, label: 'Есеп', value: stats?.problems_solved || 0, tint: 'success' },
+              { Icon: Brain, label: 'Тест', value: stats?.tests_taken || 0, tint: 'terracotta' },
+            ].map((s, i) => {
+              const colorMap = {
+                primary: { bar: '#2DC6BB', text: 'text-primary' },
+                saffron: { bar: '#F6C87D', text: 'text-saffron' },
+                success: { bar: '#3FE0A4', text: 'text-success' },
+                terracotta: { bar: '#E8955A', text: 'text-terracotta' },
+              }[s.tint]
+              return (
+                <div key={i} className="relative rounded-2xl p-2.5 text-center overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(180deg, #1A2038 0%, #151B2E 100%)',
+                    border: '1px solid rgba(232,149,90,0.10)',
+                    boxShadow: '0 10px 20px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(246,200,125,0.05)',
+                  }}>
+                  <span className="absolute top-0 left-3 right-3 h-[2px] rounded-full" style={{ background: colorMap.bar, opacity: 0.7 }} />
+                  <s.Icon size={17} strokeWidth={1.7} className={`mx-auto mb-1 ${colorMap.text}`} />
+                  <div className="font-mono font-bold text-[17px] text-text-1 leading-none">{s.value}</div>
+                  <div className="text-[9px] text-text-3 mt-1 uppercase tracking-wider">{s.label}</div>
+                </div>
+              )
+            })}
           </div>
         )}
 
@@ -164,42 +205,73 @@ export default function Home() {
 
         {/* Continue learning */}
         {lastTopic && (
-          <button onClick={() => nav('/theory')} className="w-full bg-surface border border-primary/25 rounded-xl p-3 text-left pressable shadow-card card-lift">
-            <div className="flex items-center justify-between mb-2">
+          <button onClick={() => nav('/theory')} className="relative w-full rounded-2xl p-3.5 text-left pressable card-lift overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(45,198,187,0.14) 0%, #181E36 70%, #151B2E 100%)',
+              border: '1px solid rgba(45,198,187,0.28)',
+              boxShadow: '0 14px 28px -16px rgba(45,198,187,0.25), inset 0 1px 0 rgba(246,200,125,0.05)',
+            }}>
+            <div className="absolute -right-4 -bottom-4 opacity-20 pointer-events-none">
+              <QoshkarMuyiz size={88} color="#2DC6BB" strokeWidth={1} />
+            </div>
+            <div className="relative flex items-center justify-between mb-2">
               <div className="min-w-0">
-                <p className="text-[9px] text-primary font-semibold uppercase tracking-wider mb-0.5">Жалғастыру</p>
-                <p className="text-xs font-bold text-text-1 truncate">{lastTopic.name}</p>
+                <p className="text-[9px] text-primary font-semibold uppercase tracking-[0.2em] mb-1">Жалғастыру</p>
+                <p className="font-display text-base font-bold text-text-1 truncate leading-tight" style={{ fontVariationSettings: "'opsz' 100, 'SOFT' 50" }}>{lastTopic.name}</p>
               </div>
-              <ChevronRight size={16} strokeWidth={1.5} className="text-primary/60 flex-shrink-0" />
+              <ChevronRight size={18} strokeWidth={1.8} className="text-primary flex-shrink-0" />
             </div>
             <ProgressBar value={lastTopic.percent} max={100} color="primary" showLabel />
           </button>
         )}
 
         {/* Menu */}
-        <div>
-          <p className="text-[10px] font-semibold text-text-2 uppercase tracking-wider mb-2">Бөлімдер</p>
-          <div className="space-y-1.5">
+        <div className="pt-1">
+          <div className="flex items-center gap-2 mb-2.5 px-0.5">
+            <p className="text-[10px] font-bold text-terracotta uppercase tracking-[0.24em]">Бөлімдер</p>
+            <span className="h-px flex-1 bg-gradient-to-r from-terracotta/30 via-terracotta/10 to-transparent" />
+          </div>
+          <div className="space-y-2">
             {MENU.map(({ Icon, title, subtitle, path, accent }) => (
               <button
                 key={path}
                 onClick={() => nav(path)}
-                className="w-full bg-surface border border-border rounded-xl p-3 text-left pressable shadow-card card-lift"
-                style={{ borderLeft: `3px solid ${accent}` }}
+                className="group relative w-full rounded-2xl p-3 text-left pressable card-lift overflow-hidden"
+                style={{
+                  background: 'linear-gradient(180deg, #1A2038 0%, #151B2E 100%)',
+                  border: '1px solid rgba(232,149,90,0.09)',
+                  boxShadow: '0 10px 22px -14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(246,200,125,0.04)',
+                }}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}18` }}>
-                    <Icon size={18} strokeWidth={1.5} style={{ color: accent }} />
+                {/* left accent bar */}
+                <span
+                  className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full"
+                  style={{ background: accent, boxShadow: `0 0 12px ${accent}60` }}
+                />
+                <div className="flex items-center gap-3 pl-1.5">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative"
+                    style={{
+                      background: `${accent}15`,
+                      border: `1px solid ${accent}28`,
+                    }}
+                  >
+                    <Icon size={19} strokeWidth={1.6} style={{ color: accent }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-text-1 text-xs">{title}</div>
-                    <div className="text-[10px] text-text-2 truncate mt-0.5">{subtitle}</div>
+                    <div className="font-display font-bold text-[14px] text-text-1 leading-tight" style={{ fontVariationSettings: "'opsz' 100, 'SOFT' 40" }}>{title}</div>
+                    <div className="text-[10.5px] text-text-2 truncate mt-0.5 font-medium">{subtitle}</div>
                   </div>
-                  <ChevronRight size={14} strokeWidth={1.5} className="text-text-3 flex-shrink-0" />
+                  <ChevronRight size={15} strokeWidth={1.6} className="text-text-3 flex-shrink-0 transition-transform group-active:translate-x-0.5" />
                 </div>
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Ornamental footer strip */}
+        <div className="flex justify-center pt-3 pb-1 opacity-70">
+          <RhombusBand width={180} height={10} color="#E8955A" opacity={0.45} />
         </div>
       </div>
     </div>
