@@ -36,6 +36,9 @@ docker-compose up --build
 ```bash
 # Frontend — Cloudflare Pages
 cd frontend && npm run build && npm run pages:deploy
+
+# Backend — Render (configured in render.yaml)
+# Auto-deploys from git. Manual: push to main.
 ```
 
 ## Architecture
@@ -51,7 +54,7 @@ cd frontend && npm run build && npm run pages:deploy
 
 - **AI service** (`app/services/gemini_service.py`): Filename is misleading — actually uses **Groq API** via `AsyncOpenAI(base_url="https://api.groq.com/openai/v1")`. Model: `llama-3.3-70b-versatile`, temp 0.3, max 1000 tokens. System prompt enforces Kazakh-only math responses with jailbreak detection.
 - **Database** (`app/database/database.py`): `create_tables()` on startup: create all tables → `_migrate_sqlite()` (ALTER TABLE for missing columns) → seed admin user from env → seed test bank → seed 4 PISA theory topics. All idempotent.
-- **Auth** (`app/utils/auth.py`): Admin JWT (HS256, 12h expiry). Password hashing: SHA256 with JWT_SECRET_KEY as pepper. No Telegram initData validation on backend — trusts frontend header.
+- **Auth** (`app/utils/auth.py`): Admin JWT (HS256, 12h expiry). Password hashing: SHA256 with JWT_SECRET_KEY as pepper. Telegram-based admin auth via `ADMIN_TELEGRAM_IDS` env var (comma-separated). No Telegram initData validation on backend — trusts frontend header.
 - **Progress** (`app/services/progress_service.py`): `get_or_create_user()`, `update_streak()` (increment if active yesterday, reset if >1 day gap), `calculate_user_score()` (sum of test percentages).
 - **Models**: User, Problem, AdminTestQuestion, TheoryContent (JSON blocks), TestResult, Progress, ChatHistory, BroadcastLog, AdminUser. User → TestResult/Progress have cascade delete. ChatHistory has no FK.
 
@@ -107,6 +110,6 @@ Required in `.env`:
 ```
 BOT_TOKEN, TELEGRAM_BOT_TOKEN, MINI_APP_URL, GROQ_API_KEY,
 BACKEND_URL (default http://localhost:8000), DATABASE_URL (default sqlite:///./math_pisa_bot.db),
-ADMIN_USERNAME, ADMIN_PASSWORD, JWT_SECRET_KEY
+ADMIN_USERNAME, ADMIN_PASSWORD, JWT_SECRET_KEY, ADMIN_TELEGRAM_IDS (comma-separated Telegram user IDs for admin access)
 ```
 Frontend/Admin: `VITE_API_URL` (frontend defaults to `/api` via proxy; admin defaults to `http://localhost:8000`).
