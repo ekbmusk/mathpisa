@@ -33,6 +33,11 @@ export const adminAPI = {
     toggleUserBan: (id, payload) => client.patch(`${ADMIN_PREFIX}/users/${id}/ban`, payload),
     toggleNotifications: (id, payload) => client.patch(`${ADMIN_PREFIX}/users/${id}/notifications`, payload),
     exportUsers: () => client.get(`${ADMIN_PREFIX}/users/export`, { responseType: 'blob' }),
+    exportPrePost: (minTests = 2) =>
+        client.get(`${ADMIN_PREFIX}/users/export-pre-post`, {
+            params: { min_tests: minTests },
+            responseType: 'blob',
+        }),
 
     sendBroadcast: (payload) => client.post(`${ADMIN_PREFIX}/broadcast`, payload),
     getBroadcastHistory: () => client.get(`${ADMIN_PREFIX}/broadcast/history`),

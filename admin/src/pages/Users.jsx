@@ -96,12 +96,27 @@ export default function Users() {
     }
   }
 
+  const exportPrePost = async () => {
+    try {
+      const blob = await adminAPI.exportPrePost(2)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'pre_post_export.csv'
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('Pre/Post CSV дайын')
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
   const profile = selected?.user || selected
 
   return (
     <div className="space-y-4">
       <div className="card p-4">
-        <div className="grid gap-2 md:grid-cols-5">
+        <div className="grid gap-2 md:grid-cols-6">
           <input
             className="input md:col-span-2"
             placeholder="Аты немесе username..."
@@ -129,6 +144,9 @@ export default function Users() {
           </select>
           <button className="btn-secondary" onClick={exportCSV} type="button">
             CSV экспорт
+          </button>
+          <button className="btn-secondary" onClick={exportPrePost} type="button">
+            Pre/Post CSV
           </button>
         </div>
       </div>

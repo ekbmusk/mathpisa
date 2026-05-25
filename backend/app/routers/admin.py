@@ -494,6 +494,138 @@ async def export_users_csv(
     )
 
 
+@router.get("/users/export-pre-post")
+async def export_pre_post_csv(
+    min_tests: int = Query(2, ge=1, le=50),
+    _: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Pre-test vs post-test report for учебных исследований.
+
+    Per user: first attempt (pre) vs last attempt (post). Includes Hake's
+    normalized gain g = (post − pre) / (100 − pre). Filters out users
+    with fewer than `min_tests` total attempts.
+    """
+    from app.routers.tests import TOPIC_META  # local import — avoids circular
+
+    users = db.query(User).order_by(User.id.asc()).all()
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+
+    topic_ids = list(TOPIC_META.keys())
+    header = [
+        "user_id",
+        "telegram_id",
+        "full_name",
+        "username",
+        "level",
+        "total_tests",
+        "pre_date",
+        "pre_questions",
+        "pre_correct",
+        "pre_percentage",
+        "post_date",
+        "post_questions",
+        "post_correct",
+        "post_percentage",
+        "delta_percentage",
+        "normalized_gain",
+        "days_between",
+    ]
+    for tid in topic_ids:
+        header += [f"pre_{tid}_pct", f"post_{tid}_pct", f"delta_{tid}_pct"]
+    writer.writerow(header)
+
+    for user in users:
+        results = (
+            db.query(TestResult)
+            .filter(TestResult.user_id == user.id)
+            .order_by(TestResult.created_at.asc())
+            .all()
+        )
+        if len(results) < min_tests:
+            continue
+
+        pre = results[0]
+        post = results[-1]
+        delta = round(post.percentage - pre.percentage, 2)
+
+        if pre.percentage >= 100:
+            normalized_gain = ""
+        else:
+            normalized_gain = round((post.percentage - pre.percentage) / (100 - pre.percentage), 4)
+
+        days_between = ""
+        if pre.created_at and post.created_at:
+            days_between = (post.created_at - pre.created_at).days
+
+        full_name = " ".join(filter(None, [user.first_name, user.last_name])) or ""
+
+        row = [
+            user.id,
+            user.telegram_id,
+            full_name,
+            user.username or "",
+            user.level or "",
+            len(results),
+            pre.created_at.isoformat() if pre.created_at else "",
+            pre.total_questions,
+            pre.correct_answers,
+            round(pre.percentage, 2),
+            post.created_at.isoformat() if post.created_at else "",
+            post.total_questions,
+            post.correct_answers,
+            round(post.percentage, 2),
+            delta,
+            normalized_gain,
+            days_between,
+        ]
+
+        # Topic breakdown: aggregate per-topic correct/total in pre vs post
+        def _topic_stats(answers):
+            stats: dict[str, list[int]] = {tid: [0, 0] for tid in topic_ids}
+            if not answers:
+                return stats
+            qids = [a.get("question_id") for a in answers if isinstance(a, dict)]
+            qmap = {
+                q.id: q.topic
+                for q in db.query(AdminTestQuestion).filter(AdminTestQuestion.id.in_(qids)).all()
+            }
+            for a in answers:
+                if not isinstance(a, dict):
+                    continue
+                topic = qmap.get(a.get("question_id"))
+                if topic not in stats:
+                    continue
+                stats[topic][1] += 1
+                if a.get("correct"):
+                    stats[topic][0] += 1
+            return stats
+
+        pre_stats = _topic_stats(pre.answers or [])
+        post_stats = _topic_stats(post.answers or [])
+        for tid in topic_ids:
+            pre_c, pre_t = pre_stats[tid]
+            post_c, post_t = post_stats[tid]
+            pre_pct = round(pre_c / pre_t * 100, 2) if pre_t else ""
+            post_pct = round(post_c / post_t * 100, 2) if post_t else ""
+            if isinstance(pre_pct, (int, float)) and isinstance(post_pct, (int, float)):
+                delta_topic = round(post_pct - pre_pct, 2)
+            else:
+                delta_topic = ""
+            row += [pre_pct, post_pct, delta_topic]
+
+        writer.writerow(row)
+
+    buffer.seek(0)
+    filename = f"pre_post_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @router.get("/users/{user_id}", response_model=UserProfileResponse)
 async def get_user_profile(
     user_id: int,
