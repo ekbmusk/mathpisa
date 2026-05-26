@@ -11,7 +11,7 @@ import FormulaRenderer from '../components/FormulaRenderer'
 import { useUserStore } from '../store/userStore'
 import { adminAPI } from '../api/admin'
 
-const ADMIN_IDS = [876371171, 6433578212]
+const ADMIN_IDS = [876371171, 6433578212, 616559537]
 
 function StatCard({ icon: Icon, label, value, accent = '#6C63FF' }) {
   return (
