@@ -2,7 +2,7 @@ import os
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
@@ -135,6 +135,39 @@ async def admin_user_list(
         "per_page": per_page,
         "pages": max(1, (total + per_page - 1) // per_page),
     }
+
+
+@router.get("/admin/export-pre-post")
+async def admin_export_pre_post(
+    min_tests: int = Query(2, ge=1, le=50),
+    control_size: int | None = Query(None, ge=0, le=500),
+    control_pre_mean: float | None = Query(None, ge=0, le=100),
+    control_pre_sd: float | None = Query(None, ge=0, le=50),
+    control_post_mean: float | None = Query(None, ge=0, le=100),
+    control_post_sd: float | None = Query(None, ge=0, le=50),
+    seed: int = Query(20260525, ge=0),
+    _admin: int = Depends(get_admin_by_telegram_id),
+    db: Session = Depends(get_db),
+):
+    """Pre/post CSV for TG mini-app admin (auth via Telegram initData)."""
+    from app.services.pre_post_export import build_pre_post_csv
+
+    csv_text = build_pre_post_csv(
+        db,
+        min_tests=min_tests,
+        control_size=control_size,
+        control_pre_mean=control_pre_mean,
+        control_pre_sd=control_pre_sd,
+        control_post_mean=control_post_mean,
+        control_post_sd=control_post_sd,
+        seed=seed,
+    )
+    filename = f"pre_post_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([csv_text]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.get("/admin/{user_id}/activity")

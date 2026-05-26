@@ -4,7 +4,7 @@ import WebApp from '@twa-dev/sdk'
 import {
   Users, BarChart2, BookOpen, Brain, ChevronRight, ChevronLeft, Search,
   Flame, Trophy, MessageCircle, Target, TrendingUp, TrendingDown, Minus,
-  AlertTriangle, Clock, Activity, ArrowLeft,
+  AlertTriangle, Clock, Activity, ArrowLeft, Download,
 } from 'lucide-react'
 import TopBar from '../components/TopBar'
 import FormulaRenderer from '../components/FormulaRenderer'
@@ -46,9 +46,33 @@ function MiniBar({ data, maxVal }) {
 // ── Dashboard View ──────────────────────────────────────────────
 
 function DashboardView({ stats, onViewUsers }) {
+  const [exporting, setExporting] = useState(false)
+
   if (!stats) return <div className="text-center py-12 text-text-3 text-xs">Жүктелуде...</div>
 
   const maxTests = Math.max(...stats.tests_by_day.map(d => d.count), 1)
+
+  const handleExportPrePost = async () => {
+    if (exporting) return
+    setExporting(true)
+    WebApp.HapticFeedback.impactOccurred('medium')
+    try {
+      const blob = await adminAPI.exportPrePost()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `pre_post_export_${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      WebApp.HapticFeedback.notificationOccurred('success')
+    } catch (err) {
+      WebApp.showAlert?.('Экспорт қатесі: ' + (err?.message || 'белгісіз'))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -109,6 +133,25 @@ function DashboardView({ stats, onViewUsers }) {
           <span className="text-xs font-semibold text-primary">Пайдаланушылар тізімі</span>
         </div>
         <ChevronRight size={16} className="text-primary" />
+      </button>
+
+      <button
+        onClick={handleExportPrePost}
+        disabled={exporting}
+        className="w-full bg-success/10 border border-success/30 rounded-xl p-3 flex items-center justify-between pressable disabled:opacity-50"
+      >
+        <div className="flex items-center gap-2">
+          <Download size={16} className="text-success" />
+          <div className="text-left">
+            <p className="text-xs font-semibold text-success">Pre/Post CSV экспорт</p>
+            <p className="text-[10px] text-text-3">Эксперимент + дәстүрлі топ, t-test, Cohen's d</p>
+          </div>
+        </div>
+        {exporting ? (
+          <span className="text-[10px] text-success">...</span>
+        ) : (
+          <ChevronRight size={16} className="text-success" />
+        )}
       </button>
     </div>
   )
